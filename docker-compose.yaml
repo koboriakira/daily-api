@@ -1,0 +1,16 @@
+# @format
+
+version: "3.0"
+
+services:
+  api:
+    container_name: "spotify-api"
+    volumes:
+      - .:/var/www/
+    build:
+      context: .
+      dockerfile: ./docker/api/Dockerfile
+    ports:
+      - 5021:8080
+    env_file:
+      - .env
