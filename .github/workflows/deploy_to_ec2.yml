@@ -1,0 +1,48 @@
+# @format
+
+name: Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_EC2_IP: ${{ secrets.AWS_EC2_IP }}
+  SSH_KEY: ${{ secrets.MY_SSH_KEY }}
+  KNOWN_HOSTS: ${{ secrets.MY_KNOWN_HOSTS }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ env.SSH_KEY }}
+          name: id_rsa
+          known_hosts: ${{ env.KNOWN_HOSTS }}
+
+      # TODO: DockerイメージをビルドしてDocker Hubにプッシュする
+      # その後、Dockerイメージをpullしてrunするようにしてもいいかな
+
+      # ついでにPyPiのパッケージもビルドしてアップロードしたい
+
+      - name: rsync
+        run: |
+          rsync -a ./app/ ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/spotify-api/app/
+          rsync -a ./requirements.txt ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/spotify-api/requirements.txt
+          rsync -a ./docker/api/Dockerfile ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/spotify-api/docker/api/Dockerfile
+          chmod +x ./.github/workflows/scripts/start_docker_container.sh
+          rsync -a ./.github/workflows/scripts/start_docker_container.sh ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/spotify-api/start_docker_container.sh
+
+      - name: restart docker container
+        run: |
+          ssh ec2-user@${{ env.AWS_EC2_IP }} /home/ec2-user/spotify-api/start_docker_container.sh
