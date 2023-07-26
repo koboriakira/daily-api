@@ -11,7 +11,9 @@ app = FastAPI()
 # Spotify Developer Dashboardで取得した情報を入力します
 CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
 CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
-REDIRECT_URI = os.getenv('SPOTIFY_REDIRECT_URI')
+IP_ADDRESS = os.getenv('GLOBAL_IP_ADDRESS')
+PORT = 5023
+REDIRECT_URI = f'http://{IP_ADDRESS}:{PORT}/callback'
 
 # ユーザーのスコープを設定します。
 # 最近聴いた曲を取得するためには'user-read-recently-played'が必要です
