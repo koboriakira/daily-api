@@ -23,6 +23,11 @@ sp_oauth = SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
                         redirect_uri=REDIRECT_URI, scope=SCOPE)
 
 
+@app.get("/")
+async def index():
+    return {"message": "Hello World"}
+
+
 @app.get("/get_recently_played")
 async def get_recently_played():
     # ユーザーをSpotifyの認証ページにリダイレクト
