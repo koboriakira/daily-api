@@ -11,6 +11,6 @@ services:
       context: .
       dockerfile: ./docker/api/Dockerfile
     ports:
-      - 5021:8080
+      - 5023:8080
     env_file:
       - .env
