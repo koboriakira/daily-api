@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Request, Response
-import requests
-import base64
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-import urllib
 import os
+from app.domain.item import Items
+import random
+import urllib
 
 app = FastAPI()
 
@@ -19,8 +19,10 @@ REDIRECT_URI = f'http://{IP_ADDRESS}:{PORT}/callback'
 # 最近聴いた曲を取得するためには'user-read-recently-played'が必要です
 SCOPE = 'user-read-recently-played'
 
-sp_oauth = SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
-                        redirect_uri=REDIRECT_URI, scope=SCOPE)
+sp_oauth = SpotifyOAuth(client_id=CLIENT_ID,
+                        client_secret=CLIENT_SECRET,
+                        redirect_uri=REDIRECT_URI,
+                        scope=SCOPE)
 
 
 @app.get("/")
@@ -32,6 +34,7 @@ async def index():
 async def get_recently_played():
     # ユーザーをSpotifyの認証ページにリダイレクト
     auth_url = sp_oauth.get_authorize_url()
+    print(auth_url)
     return Response(headers={"Location": auth_url}, status_code=303)
 
 
@@ -47,4 +50,9 @@ async def callback(request: Request):
     sp = spotipy.Spotify(auth=token_info['access_token'])
     recently_played = sp.current_user_recently_played()
 
-    return recently_played
+    items = Items.from_dict_list(values=recently_played['items'])
+
+    external_urls = list(set(
+        map(lambda item: item.context["external_urls"]["spotify"], items.values)))
+
+    return ",".join(external_urls)
