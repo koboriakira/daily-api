@@ -12,6 +12,8 @@ env:
   AWS_EC2_IP: ${{ secrets.AWS_EC2_IP }}
   SSH_KEY: ${{ secrets.MY_SSH_KEY }}
   KNOWN_HOSTS: ${{ secrets.MY_KNOWN_HOSTS }}
+  SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+  SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
 
 jobs:
   deploy:
@@ -45,4 +47,4 @@ jobs:
 
       - name: restart docker container
         run: |
-          ssh ec2-user@${{ env.AWS_EC2_IP }} /home/ec2-user/spotify-api/start_docker_container.sh
+          ssh ec2-user@${{ env.AWS_EC2_IP }} /home/ec2-user/spotify-api/start_docker_container.sh ${{ env.SPOTIFY_CLIENT_ID }} ${{ env.SPOTIFY_CLIENT_SECRET }}

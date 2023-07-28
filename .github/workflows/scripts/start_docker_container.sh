@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+SPOTIFY_CLIENT_ID=$1
+SPOTIFY_CLIENT_SECRET=$2
+
 cd ~/spotify-api
 docker rm -f spotify-api || true
 docker build -t spotify-api -f ./docker/api/Dockerfile .
