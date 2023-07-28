@@ -1,17 +1,16 @@
 from app.domain.spotify.item import Items
+from app.util.cache import Cache
+from app.util.global_ip_address import GlobalIpAddress
 import os
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-from app.util.cache import Cache
 from typing import Optional
 
 
 class SpotifyController:
+
     CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
     CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
-    IP_ADDRESS = os.getenv('GLOBAL_IP_ADDRESS')
-    PORT = 5023
-    REDIRECT_URI = f'http://{IP_ADDRESS}:{PORT}/spotify/access_token_callback'
     SCOPE = 'user-library-read'
 
     def __init__(self, sp: spotipy.Spotify):
@@ -70,5 +69,15 @@ class SpotifyController:
     def __get_spotify_oauth(cls):
         return SpotifyOAuth(client_id=cls.CLIENT_ID,
                             client_secret=cls.CLIENT_SECRET,
-                            redirect_uri=cls.REDIRECT_URI,
+                            redirect_uri=cls.get_callback_url(),
                             scope=cls.SCOPE)
+
+    @classmethod
+    def get_callback_url(cls) -> str:
+        """ 認証のコールバック用URLを取得 """
+        # NOTE: 返却値が変わる場合は、Spotifyのアプリ設定画面のRedirect URIsも変更する必要がある
+        path = "spotify/access_token_callback"
+        if os.getenv('ENVIRONMENT') == "development":
+            return f"http://localhost:5023/{path}"
+        else:
+            return f"http://{GlobalIpAddress.get()}/{path}"
