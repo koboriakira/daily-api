@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Response
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import os
-from app.domain.item import Items
+from app.domain.spotify.item import Items
 import random
 import urllib
 
@@ -17,7 +17,7 @@ REDIRECT_URI = f'http://{IP_ADDRESS}:{PORT}/callback'
 
 # ユーザーのスコープを設定します。
 # 最近聴いた曲を取得するためには'user-read-recently-played'が必要です
-SCOPE = 'user-read-recently-played'
+SCOPE = 'user-library-read'
 
 sp_oauth = SpotifyOAuth(client_id=CLIENT_ID,
                         client_secret=CLIENT_SECRET,
@@ -48,11 +48,5 @@ async def callback(request: Request):
 
     # アクセストークンを使用して最近聴いた曲の履歴を取得
     sp = spotipy.Spotify(auth=token_info['access_token'])
-    recently_played = sp.current_user_recently_played()
-
-    items = Items.from_dict_list(values=recently_played['items'])
-
-    external_urls = list(set(
-        map(lambda item: item.context["external_urls"]["spotify"], items.values)))
-
-    return ",".join(external_urls)
+    recently_played = sp.current_user_saved_tracks(limit=50)
+    return recently_played

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from app.domain.track import Track
+from app.domain.spotify.track import Track
 
 
 @dataclass(frozen=True)
