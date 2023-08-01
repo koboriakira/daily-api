@@ -1,7 +1,7 @@
 import os
 from notion_client import Client
 from app.domain.notion.properties import Date
-from app.domain.notion.page import DailyLog, Recipe
+from app.domain.notion.page import DailyLog, Recipe, Webclip
 from datetime import datetime
 
 
@@ -53,9 +53,13 @@ class NotionClient:
         date = Date.of("日付", properties["日付"])
 
         # レシピ
-        recipe_ids = properties["レシピ"]["relation"]
-        recipe_ids = list(
-            map(lambda r: self.__find_recipe(r["id"]), recipe_ids))
+        recipe_ids = self.__get_relation_ids(properties, "レシピ")
+        recipes = list(map(lambda r_id: self.__find_recipe(r_id), recipe_ids))
+
+        # Webクリップ
+        webclip_ids = self.__get_relation_ids(properties, "📎 Webclip")
+        webclips = list(
+            map(lambda w_id: self.__find_webclip(w_id), webclip_ids))
 
         return DailyLog(
             id=daily_log["id"],
@@ -64,7 +68,8 @@ class NotionClient:
             parent=daily_log["parent"],
             archived=daily_log["archived"],
             date=date,
-            recipes=recipe_ids
+            recipes=recipes,
+            webclips=webclips
         )
 
     def __find_daily_log(self, date: datetime) -> dict:
@@ -80,6 +85,14 @@ class NotionClient:
         result = self.client.pages.retrieve(page_id=page_id)
         return Recipe.of(result)
 
+    def __find_webclip(self, page_id: str) -> Webclip:
+        result = self.client.pages.retrieve(page_id=page_id)
+        return Webclip.of(result)
+
+    def __get_relation_ids(self, properties: dict, key: str) -> list[str]:
+        return list(map(
+            lambda r: r["id"], properties[key]["relation"]))
+
 
 if __name__ == "__main__":
     # python -m app.interface.notion_client
@@ -88,3 +101,4 @@ if __name__ == "__main__":
     daily_log = notion_client.get_daily_log(datetime(2023, 7, 30))
     print(daily_log.recipes)
     print(daily_log.date)
+    print(daily_log.webclips)
