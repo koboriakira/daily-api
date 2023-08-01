@@ -1,8 +1,6 @@
-from dataclasses import dataclass
 from abc import ABCMeta, abstractmethod
 
 
-@dataclass(frozen=True)
 class Property(metaclass=ABCMeta):
     id: str
     name: str
@@ -13,7 +11,6 @@ class Property(metaclass=ABCMeta):
         pass
 
 
-@dataclass(frozen=True)
 class Properties:
     values: list[Property]
 

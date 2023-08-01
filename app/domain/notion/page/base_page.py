@@ -8,8 +8,6 @@ class BasePage(metaclass=ABCMeta):
     id: str
     created_time: datetime
     last_edited_time: datetime
-    # cover:
-    # icon
     parent: dict  # いずれオブジェクトにする
     archived: bool
     object: str = "page"

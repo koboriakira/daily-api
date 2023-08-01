@@ -1,8 +1,7 @@
 import os
 from notion_client import Client
-from app.domain.notion.properties.date import Date
-from app.domain.notion.properties.property import Properties
-from app.domain.notion.daily_log import DailyLog
+from app.domain.notion.properties import Date
+from app.domain.notion.page import DailyLog, Recipe
 from datetime import datetime
 
 
@@ -59,5 +58,8 @@ class NotionClient:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    daily_log = notion_client.get_daily_log(datetime.now())
-    print(daily_log)
+    page = notion_client.client.pages.retrieve(
+        page_id="85cd5f2f-b2ee-4896-a579-7a7522ceadec")
+    print(page)
+    recipe = Recipe.of(page)
+    print(recipe)
