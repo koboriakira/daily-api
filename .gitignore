@@ -4,3 +4,4 @@ __pycache__
 .env
 .cache
 sample_get_recently_played.json
+sample_json
