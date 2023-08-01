@@ -4,21 +4,24 @@ from app.domain.notion.properties import Date
 from datetime import datetime
 
 
-@dataclass(frozen=True)
+@dataclass
 class DailyLog(BasePage):
-    # 共通部分
-    id: str
-    created_time: datetime
-    last_edited_time: datetime
-    parent: dict  # いずれオブジェクトにする
-    archived: bool
-
-    # レシピ固有部分
     date: Date  # 日付
     recipes: list[str]  # レシピ
 
+    def __init__(self, id: str, created_time: datetime, last_edited_time: datetime, parent: dict, archived: bool,
+                 date: Date, recipes: list[str]):
+        self.id = id
+        self.created_time = created_time
+        self.last_edited_time = last_edited_time
+        self.parent = parent
+        self.archived = archived
+        self.date = date
+        self.recipes = recipes
+
     @staticmethod
     def of(query_result: dict):
+        print(query_result)
         properties = query_result["properties"]
         date = Date.of("日付", properties["日付"])
         recipe_ids = properties["レシピ"]["relation"]

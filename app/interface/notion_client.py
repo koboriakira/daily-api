@@ -58,8 +58,6 @@ class NotionClient:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    page = notion_client.client.pages.retrieve(
-        page_id="85cd5f2f-b2ee-4896-a579-7a7522ceadec")
-    print(page)
-    recipe = Recipe.of(page)
-    print(recipe)
+    # 2023-07-29の日報を取得
+    daily_log = notion_client.get_daily_log(datetime(2023, 7, 30))
+    print(daily_log)

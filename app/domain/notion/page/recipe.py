@@ -7,15 +7,16 @@ from datetime import datetime
 
 @dataclass(frozen=True)
 class Recipe(BasePage):
-    # 共通部分
-    id: str
-    created_time: datetime
-    last_edited_time: datetime
-    parent: dict  # いずれオブジェクトにする
-    archived: bool
-
-    # レシピ固有部分
     title: Title  # タイトル(レシピ名)
+
+    def __init__(self, id: str, created_time: datetime, last_edited_time: datetime, parent: dict, archived: bool,
+                 title: Title):
+        self.id = id
+        self.created_time = created_time
+        self.last_edited_time = last_edited_time
+        self.parent = parent
+        self.archived = archived
+        self.title = title
 
     @staticmethod
     def of(query_result: dict):

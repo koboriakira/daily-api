@@ -3,12 +3,19 @@ from app.domain.notion.properties.property import Property
 from typing import Optional
 
 
-@dataclass(frozen=True)
+@dataclass
 class Date(Property):
     start: Optional[str] = None
     end: Optional[str] = None
     time_zone: Optional[str] = None
     type: str = "date"
+
+    def __init__(self, name: str, id: str, start: str, end: str, time_zone: str):
+        self.id = id
+        self.name = name
+        self.start = start
+        self.end = end
+        self.time_zone = time_zone
 
     @staticmethod
     def of(name: str, param: dict) -> "Date":
