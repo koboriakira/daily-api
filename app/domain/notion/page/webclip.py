@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 from app.domain.notion.page.base_page import BasePage
+from app.domain.notion.properties import Date
 from app.domain.notion.properties import Title
+from app.domain.notion.properties import Url
 from datetime import datetime
 
 
-@dataclass
-class Recipe(BasePage):
+@dataclass(frozen=True)
+class Webclip(BasePage):
+    url: Url
     title: Title  # タイトル(レシピ名)
 
     def __init__(self, id: str, created_time: datetime, last_edited_time: datetime, parent: dict, archived: bool,
@@ -21,7 +24,7 @@ class Recipe(BasePage):
     def of(query_result: dict):
         properties = query_result["properties"]
         title = Title.of("Name", properties["Name"])
-        return Recipe(
+        return Webclip(
             id=query_result["id"],
             created_time=query_result["created_time"],
             last_edited_time=query_result["last_edited_time"],

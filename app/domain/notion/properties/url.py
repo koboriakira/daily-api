@@ -4,22 +4,22 @@ from typing import Optional
 
 
 @dataclass
-class Title(Property):
-    value: list[dict]
+class Url(Property):
+    url: str
     id: str
-    type: str = "title"
+    type: str = "url"
 
-    def __init__(self, name: str, id: str, value: list[dict]):
+    def __init__(self, name: str, url: str, id: str):
         self.name = name
+        self.url = url
         self.id = id
-        self.value = value
 
     @staticmethod
-    def of(name: str, param: dict) -> "Title":
-        return Title(
+    def of(name: str, param: dict) -> "Url":
+        return Url(
             name=name,
+            url=param["url"],
             id=param["id"],
-            value=param["title"]
         )
 
     def __dict__(self):
@@ -27,6 +27,6 @@ class Title(Property):
             self.name: {
                 "id": self.id,
                 "type": self.type,
-                "title": self.value
+                "url": self.url
             }
         }
