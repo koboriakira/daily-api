@@ -24,7 +24,7 @@ class Music(BasePage):
     def of(query_result: dict) -> 'Music':
         properties = query_result["properties"]
         spotify_url = Url.of("Spotify", properties["Spotify"])
-        title = Title.of("名前", properties["名前"])
+        title = Title.from_properties(properties)
         return Music(
             id=query_result["id"],
             created_time=query_result["created_time"],

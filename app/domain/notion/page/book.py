@@ -22,7 +22,7 @@ class Book(BasePage):
     @staticmethod
     def of(query_result: dict) -> 'Book':
         properties = query_result["properties"]
-        title = Title.of("Title", properties["Title"])
+        title = Title.from_properties(properties)
         return Book(
             id=query_result["id"],
             created_time=query_result["created_time"],

@@ -14,13 +14,11 @@ class Title(Property):
         self.id = id
         self.value = value
 
-    @staticmethod
-    def of(name: str, param: dict) -> "Title":
-        return Title(
-            name=name,
-            id=param["id"],
-            value=param["title"]
-        )
+    @classmethod
+    def from_properties(cls, properties: dict) -> "Title":
+        if "Name" in properties:
+            return cls.__of("Name", properties["Name"])
+        return cls.__of("名前", properties["名前"])
 
     def __dict__(self):
         return {
@@ -30,3 +28,11 @@ class Title(Property):
                 "title": self.value
             }
         }
+
+    @staticmethod
+    def __of(name: str, param: dict) -> "Title":
+        return Title(
+            name=name,
+            id=param["id"],
+            value=param["title"]
+        )

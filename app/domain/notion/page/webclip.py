@@ -25,7 +25,7 @@ class Webclip(BasePage):
     def of(query_result: dict):
         properties = query_result["properties"]
         url = Url.of("URL", properties["URL"])
-        title = Title.of("名前", properties["名前"])
+        title = Title.from_properties(properties)
         return Webclip(
             id=query_result["id"],
             created_time=query_result["created_time"],

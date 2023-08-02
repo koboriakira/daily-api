@@ -20,7 +20,7 @@ class Recipe(BasePage):
     @staticmethod
     def of(query_result: dict):
         properties = query_result["properties"]
-        title = Title.of("Name", properties["Name"])
+        title = Title.from_properties(properties)
         return Recipe(
             id=query_result["id"],
             created_time=query_result["created_time"],

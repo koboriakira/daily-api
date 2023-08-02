@@ -20,7 +20,7 @@ class ProwrestlingWatch(BasePage):
     @staticmethod
     def of(query_result: dict) -> 'ProwrestlingWatch':
         properties = query_result["properties"]
-        title = Title.of("Title", properties["Title"])
+        title = Title.from_properties(properties)
         return ProwrestlingWatch(
             id=query_result["id"],
             created_time=query_result["created_time"],

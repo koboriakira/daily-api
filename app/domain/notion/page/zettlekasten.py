@@ -22,7 +22,7 @@ class Zettlekasten(BasePage):
     @staticmethod
     def of(query_result: dict) -> 'Zettlekasten':
         properties = query_result["properties"]
-        title = Title.of("名前", properties["名前"])
+        title = Title.from_properties(properties)
         return Zettlekasten(
             id=query_result["id"],
             created_time=query_result["created_time"],
