@@ -14,7 +14,7 @@ env:
   KNOWN_HOSTS: ${{ secrets.MY_KNOWN_HOSTS }}
   SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
   SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
-  NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }
+  NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
   ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
 jobs:
@@ -41,12 +41,14 @@ jobs:
 
       - name: rsync
         run: |
-          rsync -a ./app/ ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/spotify-api/app/
-          rsync -a ./requirements.txt ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/spotify-api/requirements.txt
-          rsync -a ./docker/api/Dockerfile ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/spotify-api/docker/api/Dockerfile
+          ssh ec2-user@${{ env.AWS_EC2_IP }} mkdir -p /home/ec2-user/daily-api/app
+          ssh ec2-user@${{ env.AWS_EC2_IP }} mkdir -p /home/ec2-user/daily-api/docker/api
+          rsync -a ./app/ ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/app/
+          rsync -a ./requirements.txt ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/requirements.txt
+          rsync -a ./docker/api/Dockerfile ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/docker/api/Dockerfile
           chmod +x ./.github/workflows/scripts/start_docker_container.sh
-          rsync -a ./.github/workflows/scripts/start_docker_container.sh ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/spotify-api/start_docker_container.sh
+          rsync -a ./.github/workflows/scripts/start_docker_container.sh ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/start_docker_container.sh
 
       - name: restart docker container
         run: |
-          ssh ec2-user@${{ env.AWS_EC2_IP }} /home/ec2-user/spotify-api/start_docker_container.sh ${{ env.SPOTIFY_CLIENT_ID }} ${{ env.SPOTIFY_CLIENT_SECRET }} ${{ env.NOTION_API_TOKEN }} ${{ env.ACCESS_TOKEN }}
+          ssh ec2-user@${{ env.AWS_EC2_IP }} /home/ec2-user/daily-api/start_docker_container.sh ${{ env.SPOTIFY_CLIENT_ID }} ${{ env.SPOTIFY_CLIENT_SECRET }} ${{ env.NOTION_API_TOKEN }} ${{ env.ACCESS_TOKEN }}
