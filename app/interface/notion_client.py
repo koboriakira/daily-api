@@ -1,7 +1,7 @@
 import os
 from notion_client import Client
 from app.domain.notion.properties import Date
-from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music
+from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten
 from datetime import datetime
 
 
@@ -80,6 +80,12 @@ class NotionClient:
         music_ids = self.__get_relation_ids(properties, "🎧 ミュージック")
         musics = list(map(lambda m_id: self.__find_music(m_id), music_ids))
 
+        # Zettlekasten
+        zettlekasten_ids = self.__get_relation_ids(
+            properties, "📝 Zettlekasten")
+        zettlekasten = list(
+            map(lambda z_id: self.__find_zettlekasten(z_id), zettlekasten_ids))
+
         return DailyLog(
             id=daily_log["id"],
             created_time=daily_log["created_time"],
@@ -92,7 +98,8 @@ class NotionClient:
             webclips=webclips,
             books=books,
             prowrestling_watches=prowrestling_watches,
-            musics=musics
+            musics=musics,
+            zettlekasten=zettlekasten
         )
 
     def __find_daily_log(self, date: datetime) -> dict:
@@ -124,6 +131,10 @@ class NotionClient:
         result = self.client.pages.retrieve(page_id=page_id)
         return Music.of(result)
 
+    def __find_zettlekasten(self, page_id: str) -> Zettlekasten:
+        result = self.client.pages.retrieve(page_id=page_id)
+        return Zettlekasten.of(result)
+
     def __get_relation_ids(self, properties: dict, key: str) -> list[str]:
         return list(map(
             lambda r: r["id"], properties[key]["relation"]))
@@ -140,4 +151,5 @@ if __name__ == "__main__":
     # print(daily_log.summary)
     # print(daily_log.books)
     # print(daily_log.prowrestling_watches)
-    print(daily_log.musics)
+    # print(daily_log.musics)
+    print(daily_log.zettlekasten)

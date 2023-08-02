@@ -5,3 +5,4 @@ from .webclip import Webclip
 from .book import Book
 from .prowrestling_watch import ProwrestlingWatch
 from .music import Music
+from .zettlekasten import Zettlekasten
