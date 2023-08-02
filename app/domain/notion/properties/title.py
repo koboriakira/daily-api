@@ -5,6 +5,7 @@ from typing import Optional
 
 @dataclass
 class Title(Property):
+    text: str
     value: list[dict]
     id: str
     type: str = "title"
@@ -13,6 +14,7 @@ class Title(Property):
         self.name = name
         self.id = id
         self.value = value
+        self.text = "".join([item["plain_text"] for item in value])
 
     @classmethod
     def from_properties(cls, properties: dict) -> "Title":
