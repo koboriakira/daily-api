@@ -1,5 +1,8 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, Header
 from app.controller.spotify_controller import SpotifyController
+from app.interface.notion_client import NotionClient
+from app.util.authorize_checker import AuthorizeChecker
+from typing import Union
 
 app = FastAPI()
 
@@ -29,3 +32,10 @@ async def current_user_recently_played(request: Request):
     spotify_controller = SpotifyController.get_instance()
     result = spotify_controller.current_user_recently_played()
     return result
+
+
+@app.get("/notion/daily_log")
+async def callback(Authorization: Union[str, None] = Header(default=None)):
+    AuthorizeChecker.validate(access_token=Authorization)
+    notion_client = NotionClient()
+    return notion_client.get_daily_log()

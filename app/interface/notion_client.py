@@ -3,6 +3,7 @@ from notion_client import Client
 from app.domain.notion.properties import Date
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant
 from datetime import datetime
+from typing import Optional
 
 
 class NotionClient:
@@ -45,7 +46,8 @@ class NotionClient:
             ]
         )
 
-    def get_daily_log(self, date: datetime) -> DailyLog:
+    def get_daily_log(self, date: Optional[datetime] = None) -> DailyLog:
+        date = datetime.now() if date is None else date
         daily_log = self.__find_daily_log(date)
         properties = daily_log["properties"]
 
