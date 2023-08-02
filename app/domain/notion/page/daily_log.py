@@ -3,6 +3,7 @@ from app.domain.notion.page.base_page import BasePage
 from app.domain.notion.page.recipe import Recipe
 from app.domain.notion.page.webclip import Webclip
 from app.domain.notion.page.book import Book
+from app.domain.notion.page.music import Music
 from app.domain.notion.page.prowrestling_watch import ProwrestlingWatch
 from app.domain.notion.properties import Date
 from datetime import datetime
@@ -25,7 +26,8 @@ class DailyLog(BasePage):
                  recipes: list[str],
                  webclips: list[Webclip],
                  books: list[Book],
-                 prowrestling_watches: list[ProwrestlingWatch]):
+                 prowrestling_watches: list[ProwrestlingWatch],
+                 musics: list[Music]):
         self.id = id
         self.created_time = created_time
         self.last_edited_time = last_edited_time
@@ -37,3 +39,4 @@ class DailyLog(BasePage):
         self.webclips = webclips
         self.books = books
         self.prowrestling_watches = prowrestling_watches
+        self.musics = musics
