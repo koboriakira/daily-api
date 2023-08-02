@@ -1,7 +1,7 @@
 import os
 from notion_client import Client
 from app.domain.notion.properties import Date
-from app.domain.notion.page import DailyLog, Recipe, Webclip
+from app.domain.notion.page import DailyLog, Recipe, Webclip, Book
 from datetime import datetime
 
 
@@ -52,6 +52,11 @@ class NotionClient:
         # 日付
         date = Date.of("日付", properties["日付"])
 
+        # 一言
+        summary_rich_text = properties["一言"]["rich_text"]
+        summary = summary_rich_text[0]["text"]["content"] if len(
+            summary_rich_text) > 0 else ""
+
         # レシピ
         recipe_ids = self.__get_relation_ids(properties, "レシピ")
         recipes = list(map(lambda r_id: self.__find_recipe(r_id), recipe_ids))
@@ -61,6 +66,10 @@ class NotionClient:
         webclips = list(
             map(lambda w_id: self.__find_webclip(w_id), webclip_ids))
 
+        # 書籍
+        book_ids = self.__get_relation_ids(properties, "📚 書籍")
+        books = list(map(lambda b_id: self.__find_book(b_id), book_ids))
+
         return DailyLog(
             id=daily_log["id"],
             created_time=daily_log["created_time"],
@@ -68,8 +77,10 @@ class NotionClient:
             parent=daily_log["parent"],
             archived=daily_log["archived"],
             date=date,
+            summary=summary,
             recipes=recipes,
-            webclips=webclips
+            webclips=webclips,
+            books=books
         )
 
     def __find_daily_log(self, date: datetime) -> dict:
@@ -89,6 +100,10 @@ class NotionClient:
         result = self.client.pages.retrieve(page_id=page_id)
         return Webclip.of(result)
 
+    def __find_book(self, page_id: str) -> Book:
+        result = self.client.pages.retrieve(page_id=page_id)
+        return Book.of(result)
+
     def __get_relation_ids(self, properties: dict, key: str) -> list[str]:
         return list(map(
             lambda r: r["id"], properties[key]["relation"]))
@@ -99,6 +114,8 @@ if __name__ == "__main__":
     notion_client = NotionClient()
     # 2023-07-29の日報を取得
     daily_log = notion_client.get_daily_log(datetime(2023, 7, 30))
-    print(daily_log.recipes)
-    print(daily_log.date)
-    print(daily_log.webclips)
+    # print(daily_log.recipes)
+    # print(daily_log.date)
+    # print(daily_log.webclips)
+    # print(daily_log.summary)
+    print(daily_log.books)
