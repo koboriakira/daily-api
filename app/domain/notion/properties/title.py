@@ -18,7 +18,11 @@ class Title(Property):
     def from_properties(cls, properties: dict) -> "Title":
         if "Name" in properties:
             return cls.__of("Name", properties["Name"])
-        return cls.__of("名前", properties["名前"])
+        if "Title" in properties:
+            return cls.__of("Title", properties["Title"])
+        if "名前" in properties:
+            return cls.__of("名前", properties["名前"])
+        raise Exception(f"Title property not found. properties: {properties}")
 
     def __dict__(self):
         return {

@@ -1,7 +1,7 @@
 import os
 from notion_client import Client
 from app.domain.notion.properties import Date
-from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten
+from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant
 from datetime import datetime
 
 
@@ -86,6 +86,11 @@ class NotionClient:
         zettlekasten = list(
             map(lambda z_id: self.__find_zettlekasten(z_id), zettlekasten_ids))
 
+        # 外食
+        restaurant_ids = self.__get_relation_ids(properties, "🥘 外食・お持たせ")
+        restaurants = list(
+            map(lambda r_id: self.__find_restaurant(r_id), restaurant_ids))
+
         return DailyLog(
             id=daily_log["id"],
             created_time=daily_log["created_time"],
@@ -99,7 +104,8 @@ class NotionClient:
             books=books,
             prowrestling_watches=prowrestling_watches,
             musics=musics,
-            zettlekasten=zettlekasten
+            zettlekasten=zettlekasten,
+            restaurants=restaurants
         )
 
     def __find_daily_log(self, date: datetime) -> dict:
@@ -135,6 +141,10 @@ class NotionClient:
         result = self.client.pages.retrieve(page_id=page_id)
         return Zettlekasten.of(result)
 
+    def __find_restaurant(self, page_id: str) -> Restaurant:
+        result = self.client.pages.retrieve(page_id=page_id)
+        return Restaurant.of(result)
+
     def __get_relation_ids(self, properties: dict, key: str) -> list[str]:
         return list(map(
             lambda r: r["id"], properties[key]["relation"]))
@@ -145,11 +155,12 @@ if __name__ == "__main__":
     notion_client = NotionClient()
     # 2023-07-29の日報を取得
     daily_log = notion_client.get_daily_log(datetime(2023, 7, 30))
-    # print(daily_log.recipes)
-    # print(daily_log.date)
-    # print(daily_log.webclips)
-    # print(daily_log.summary)
-    # print(daily_log.books)
-    # print(daily_log.prowrestling_watches)
-    # print(daily_log.musics)
+    print(daily_log.recipes)
+    print(daily_log.date)
+    print(daily_log.webclips)
+    print(daily_log.summary)
+    print(daily_log.books)
+    print(daily_log.prowrestling_watches)
+    print(daily_log.musics)
     print(daily_log.zettlekasten)
+    print(daily_log.restaurants)

@@ -6,6 +6,7 @@ from app.domain.notion.page.book import Book
 from app.domain.notion.page.music import Music
 from app.domain.notion.page.zettlekasten import Zettlekasten
 from app.domain.notion.page.prowrestling_watch import ProwrestlingWatch
+from app.domain.notion.page.restaurant import Restaurant
 from app.domain.notion.properties import Date
 from datetime import datetime
 
@@ -29,7 +30,8 @@ class DailyLog(BasePage):
                  books: list[Book],
                  prowrestling_watches: list[ProwrestlingWatch],
                  musics: list[Music],
-                 zettlekasten: list[Zettlekasten]):
+                 zettlekasten: list[Zettlekasten],
+                 restaurants: list[Restaurant]):
         self.id = id
         self.created_time = created_time
         self.last_edited_time = last_edited_time
@@ -43,3 +45,4 @@ class DailyLog(BasePage):
         self.prowrestling_watches = prowrestling_watches
         self.musics = musics
         self.zettlekasten = zettlekasten
+        self.restaurants = restaurants
