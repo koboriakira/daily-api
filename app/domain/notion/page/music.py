@@ -3,6 +3,7 @@ from app.domain.notion.page.base_page import BasePage
 from app.domain.notion.properties import Title
 from app.domain.notion.properties import Url
 from datetime import datetime
+from app.domain.notion.block import Block
 
 
 @dataclass
@@ -11,7 +12,7 @@ class Music(BasePage):
     title: Title
 
     def __init__(self, id: str, created_time: datetime, last_edited_time: datetime, parent: dict, archived: bool,
-                 title: Title, spotify_url: Url):
+                 title: Title, spotify_url: Url, blocks: list[Block]):
         self.id = id
         self.created_time = created_time
         self.last_edited_time = last_edited_time
@@ -19,9 +20,10 @@ class Music(BasePage):
         self.archived = archived
         self.title = title
         self.spotify_url = spotify_url
+        self.blocks = blocks
 
     @staticmethod
-    def of(query_result: dict) -> 'Music':
+    def of(query_result: dict, blocks: list[Block]) -> 'Music':
         properties = query_result["properties"]
         spotify_url = Url.of("Spotify", properties["Spotify"])
         title = Title.from_properties(properties)
@@ -32,4 +34,6 @@ class Music(BasePage):
             parent=query_result["parent"],
             archived=query_result["archived"],
             title=title,
-            spotify_url=spotify_url)
+            spotify_url=spotify_url,
+            blocks=blocks,
+        )

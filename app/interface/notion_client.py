@@ -1,6 +1,7 @@
 import os
 from notion_client import Client
 from app.domain.notion.properties import Date
+from app.domain.notion.block import BlockFactory, Block
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant
 from datetime import datetime
 from typing import Optional
@@ -121,48 +122,52 @@ class NotionClient:
 
     def __find_recipe(self, page_id: str) -> Recipe:
         result = self.client.pages.retrieve(page_id=page_id)
-        return Recipe.of(result)
+        blocks = self.__get_block_children(page_id)
+        return Recipe.of(result, blocks)
 
     def __find_webclip(self, page_id: str) -> Webclip:
         result = self.client.pages.retrieve(page_id=page_id)
-        return Webclip.of(result)
+        blocks = self.__get_block_children(page_id)
+        return Webclip.of(result, blocks)
 
     def __find_book(self, page_id: str) -> Book:
         result = self.client.pages.retrieve(page_id=page_id)
-        return Book.of(result)
+        blocks = self.__get_block_children(page_id)
+        return Book.of(result, blocks)
 
     def __find_prowrestling_watch(self, page_id: str) -> ProwrestlingWatch:
         result = self.client.pages.retrieve(page_id=page_id)
-        return ProwrestlingWatch.of(result)
+        blocks = self.__get_block_children(page_id)
+        return ProwrestlingWatch.of(result, blocks)
 
     def __find_music(self, page_id: str) -> Music:
         result = self.client.pages.retrieve(page_id=page_id)
-        return Music.of(result)
+        blocks = self.__get_block_children(page_id)
+        return Music.of(result, blocks)
 
     def __find_zettlekasten(self, page_id: str) -> Zettlekasten:
         result = self.client.pages.retrieve(page_id=page_id)
-        return Zettlekasten.of(result)
+        blocks = self.__get_block_children(page_id)
+        return Zettlekasten.of(result, blocks)
 
     def __find_restaurant(self, page_id: str) -> Restaurant:
         result = self.client.pages.retrieve(page_id=page_id)
-        return Restaurant.of(result)
+        blocks = self.__get_block_children(page_id)
+        return Restaurant.of(result, blocks)
 
     def __get_relation_ids(self, properties: dict, key: str) -> list[str]:
         return list(map(
             lambda r: r["id"], properties[key]["relation"]))
+
+    def __get_block_children(self, page_id: str) -> list:
+        block_entities = self.client.blocks.children.list(block_id=page_id)[
+            "results"]
+        return list(map(lambda b: BlockFactory.create(b), block_entities))
 
 
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
     # 2023-07-29の日報を取得
-    daily_log = notion_client.get_daily_log(datetime(2023, 7, 30))
-    print(daily_log.recipes)
-    print(daily_log.date)
-    print(daily_log.webclips)
-    print(daily_log.summary)
-    print(daily_log.books)
-    print(daily_log.prowrestling_watches)
-    print(daily_log.musics)
-    print(daily_log.zettlekasten)
-    print(daily_log.restaurants)
+    daily_log = notion_client.get_daily_log(date=datetime(2023, 7, 29))
+    print(daily_log.recipes[0].blocks)
