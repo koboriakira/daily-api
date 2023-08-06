@@ -7,3 +7,5 @@ from .prowrestling_watch import ProwrestlingWatch
 from .music import Music
 from .zettlekasten import Zettlekasten
 from .restaurant import Restaurant
+from .go_out import GoOut
+from .arata import Arata

@@ -9,6 +9,7 @@ from app.domain.notion.block.divider import Divider
 from app.domain.notion.block.bulleted_list_item import BulletedlistItem
 from app.domain.notion.block.embed import Embed
 from app.domain.notion.block.bookmark import Bookmark
+from app.domain.notion.block.image import Image
 from typing import Union
 
 
@@ -41,6 +42,8 @@ class BlockFactory():
                 return Embed.of(block)
             case BlockType.BOOKMARK:
                 return Bookmark.of(block)
+            case BlockType.IMAGE:
+                return Image.of(block)
             case _:
                 print(block)
                 raise ValueError(

@@ -7,6 +7,8 @@ from app.domain.notion.page.music import Music
 from app.domain.notion.page.zettlekasten import Zettlekasten
 from app.domain.notion.page.prowrestling_watch import ProwrestlingWatch
 from app.domain.notion.page.restaurant import Restaurant
+from app.domain.notion.page.go_out import GoOut
+from app.domain.notion.page.arata import Arata
 from app.domain.notion.properties import Date
 from datetime import datetime
 
@@ -17,6 +19,13 @@ class DailyLog(BasePage):
     summary: str  # 一言
     recipes: list[Recipe]  # レシピ
     webclips: list[Webclip]  # Webクリップ
+    books: list[Book]  # 書籍
+    prowrestling_watches: list[ProwrestlingWatch]  # プロレス観戦記録
+    musics: list[Music]  # 音楽
+    zettlekasten: list[Zettlekasten]  # Zettlekasten
+    restaurants: list[Restaurant]  # 外食
+    go_outs: list[GoOut]  # おでかけ
+    aratas: list[Arata]  # あらた
 
     def __init__(self, id: str,
                  created_time: datetime,
@@ -31,7 +40,9 @@ class DailyLog(BasePage):
                  prowrestling_watches: list[ProwrestlingWatch],
                  musics: list[Music],
                  zettlekasten: list[Zettlekasten],
-                 restaurants: list[Restaurant]):
+                 restaurants: list[Restaurant],
+                 go_outs: list[GoOut],
+                 aratas: list[Arata]):
         self.id = id
         self.created_time = created_time
         self.last_edited_time = last_edited_time
@@ -46,3 +57,5 @@ class DailyLog(BasePage):
         self.musics = musics
         self.zettlekasten = zettlekasten
         self.restaurants = restaurants
+        self.go_outs = go_outs
+        self.aratas = aratas

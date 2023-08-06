@@ -2,7 +2,7 @@ import os
 from notion_client import Client
 from app.domain.notion.properties import Date
 from app.domain.notion.block import BlockFactory, Block
-from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant
+from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
 from datetime import datetime
 from typing import Optional
 
@@ -51,6 +51,7 @@ class NotionClient:
         date = datetime.now() if date is None else date
         daily_log = self.__find_daily_log(date)
         properties = daily_log["properties"]
+        print(properties)
 
         # 日付
         date = Date.of("日付", properties["日付"])
@@ -94,6 +95,16 @@ class NotionClient:
         restaurants = list(
             map(lambda r_id: self.__find_restaurant(r_id), restaurant_ids))
 
+        # おでかけ
+        go_out_ids = self.__get_relation_ids(properties, "おでかけ")
+        go_outs = list(
+            map(lambda g_id: self.__find_go_out(g_id), go_out_ids))
+
+        # あらた
+        arata_ids = self.__get_relation_ids(properties, "あらた")
+        aratas = list(
+            map(lambda a_id: self.__find_arata(a_id), arata_ids))
+
         return DailyLog(
             id=daily_log["id"],
             created_time=daily_log["created_time"],
@@ -108,8 +119,13 @@ class NotionClient:
             prowrestling_watches=prowrestling_watches,
             musics=musics,
             zettlekasten=zettlekasten,
-            restaurants=restaurants
+            restaurants=restaurants,
+            go_outs=go_outs,
+            aratas=aratas
         )
+
+    def add_text_daily_log(self, date: datetime, text: str) -> None:
+        """ 指定されたテキストをデイリーログの末尾に追記する """
 
     def __find_daily_log(self, date: datetime) -> dict:
         data = self.client.databases.query(
@@ -155,6 +171,16 @@ class NotionClient:
         blocks = self.__get_block_children(page_id)
         return Restaurant.of(result, blocks)
 
+    def __find_go_out(self, page_id: str) -> GoOut:
+        result = self.client.pages.retrieve(page_id=page_id)
+        blocks = self.__get_block_children(page_id)
+        return GoOut.of(result, blocks)
+
+    def __find_arata(self, page_id: str) -> Arata:
+        result = self.client.pages.retrieve(page_id=page_id)
+        blocks = self.__get_block_children(page_id)
+        return Arata.of(result, blocks)
+
     def __get_relation_ids(self, properties: dict, key: str) -> list[str]:
         return list(map(
             lambda r: r["id"], properties[key]["relation"]))
@@ -168,6 +194,5 @@ class NotionClient:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    # 2023-07-29の日報を取得
-    daily_log = notion_client.get_daily_log(date=datetime(2023, 7, 29))
-    print(daily_log.recipes[0].blocks)
+    daily_log = notion_client.get_daily_log(date=datetime(2023, 8, 5))
+    print(daily_log)
