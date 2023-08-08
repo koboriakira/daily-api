@@ -34,6 +34,17 @@ async def current_user_recently_played(request: Request):
     return result
 
 
+@app.post("/spotify/{track_id}/add_notion")
+async def spotify_add_notion(track_id: str):
+    spotify_controller = SpotifyController.get_instance()
+    notion_client = NotionClient()
+    track = spotify_controller.get_track(track_id=track_id)
+    daily_log = notion_client.get_daily_log()
+    daily_log_id = daily_log.id
+    notion_client.add_track(track=track, daily_log_id=daily_log_id)
+    return track
+
+
 @app.get("/notion/daily_log")
 async def callback(Authorization: Union[str, None] = Header(default=None)):
     AuthorizeChecker.validate(access_token=Authorization)

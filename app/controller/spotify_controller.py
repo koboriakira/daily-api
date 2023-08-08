@@ -1,4 +1,4 @@
-from app.domain.spotify.item import Items
+from app.domain.spotify.item import Items, Track
 from app.util.cache import Cache
 from app.util.global_ip_address import GlobalIpAddress
 import os
@@ -42,6 +42,14 @@ class SpotifyController:
 
         return ",".join(external_urls)
 
+    def get_track(self, track_id: str) -> Track:
+        token_info = self.__read_access_token_info()
+        sp = spotipy.Spotify(auth=token_info['access_token'])
+        track_entity = sp.track(track_id=track_id)
+        track = Track.from_dict(track_entity)
+        # TODO: trackタイプかalbumタイプかを判定する
+        return track
+
     @classmethod
     def get_recently_played_url(cls) -> str:
         """ ユーザーをSpotifyの認証ページを生成する """
@@ -81,3 +89,7 @@ class SpotifyController:
             return f"http://localhost:5023/{path}"
         else:
             return f"http://{GlobalIpAddress.get()}/{path}"
+
+
+if __name__ == "__main__":
+    SpotifyController.get_recently_played_url()

@@ -1,7 +1,9 @@
 import os
 from notion_client import Client
+from app.domain.spotify.item import Track
 from app.domain.notion.properties import Date
 from app.domain.notion.block import BlockFactory, Block
+from app.domain.notion.database import DatabaseType
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
 from datetime import datetime
 from typing import Optional
@@ -127,6 +129,94 @@ class NotionClient:
     def add_text_daily_log(self, date: datetime, text: str) -> None:
         """ 指定されたテキストをデイリーログの末尾に追記する """
 
+    def add_track(self, track: Track, daily_log_id: str) -> None:
+        """ 指定されたトラックを音楽データベースに追加する """
+        data = self.client.databases.query(
+            database_id=DatabaseType.TAG.value)
+        # すでに存在するか確認
+        for result in data["results"]:
+            title = result["properties"]["名前"]["title"][0]["text"]["content"]
+            if title == track.name:
+                return
+
+        # タグを作成
+        tag_page_ids = []
+        for artist in track.artists:
+            page_id = self.add_tag(name=artist["name"])
+            tag_page_ids.append(page_id)
+        tag_page_ids = list(map(lambda t: {"id": t}, list(set(tag_page_ids))))
+
+        # 新しいページを作成
+        result = self.client.pages.create(
+            parent={"type": "database_id",
+                    "database_id": DatabaseType.MUSIC.value},
+            properties={
+                "名前": {
+                    "title": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": track.name
+                            }
+                        }
+                    ]
+                },
+                "タグ": {
+                    "type": "relation",
+                    "relation": tag_page_ids,
+                    "has_more": False
+                },
+                "デイリーログ": {
+                    "type": "relation",
+                    "relation": [
+                        {
+                            "id": daily_log_id
+                        }
+                    ],
+                    "has_more": False
+                },
+                "Spotify": {
+                    # "id": "6t6m",
+                    "type": "url",
+                    "url": track.external_urls["spotify"]
+                },
+            }
+        )
+        page_id = result["id"]
+        # プレイヤーを追加
+        # 画像を追加することはできないが、NotionAPIが対応したらやりたい
+
+    def add_tag(self, name: str) -> str:
+        """ 指定されたタグをタグデータベースに追加する """
+        data = self.client.databases.query(
+            database_id=DatabaseType.TAG.value)
+        # すでに存在するか確認
+        for result in data["results"]:
+            title = result["properties"]["名前"]["title"][0]["text"]["content"]
+            if title == name:
+                print(result)
+                return result["id"]
+        # 作成
+        result = self.client.pages.create(
+            parent={
+                "type": "database_id",
+                "database_id": DatabaseType.TAG.value
+            },
+            properties={
+                "名前": {
+                    "title": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": name
+                            }
+                        }
+                    ]
+                }
+            }
+        )
+        return result["id"]
+
     def __find_daily_log(self, date: datetime) -> dict:
         data = self.client.databases.query(
             database_id="58da568b4e634a469ffe36adeb59ab30")
@@ -194,5 +284,7 @@ class NotionClient:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    daily_log = notion_client.get_daily_log(date=datetime(2023, 8, 5))
-    print(daily_log)
+    # daily_log = notion_client.get_daily_log(date=datetime(2023, 8, 5))
+    # print(daily_log)
+    print(notion_client.client.blocks.children.list(
+        block_id="deb7faca6cdd4ac3b604d6720c4e25a3"))
