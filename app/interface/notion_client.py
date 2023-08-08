@@ -133,7 +133,7 @@ class NotionClient:
     def add_track(self, track: Track, daily_log_id: str) -> str:
         """ 指定されたトラックを音楽データベースに追加する """
         data = self.client.databases.query(
-            database_id=DatabaseType.TAG.value)
+            database_id=DatabaseType.MUSIC.value)
         # すでに存在するか確認
         for result in data["results"]:
             title = result["properties"]["名前"]["title"][0]["text"]["content"]
@@ -203,7 +203,7 @@ class NotionClient:
     def add_album(self, album: Album, daily_log_id: str) -> str:
         """ 指定されたアルバムを音楽データベースに追加する """
         data = self.client.databases.query(
-            database_id=DatabaseType.TAG.value)
+            database_id=DatabaseType.MUSIC.value)
         # すでに存在するか確認
         for result in data["results"]:
             title = result["properties"]["名前"]["title"][0]["text"]["content"]
@@ -377,3 +377,6 @@ if __name__ == "__main__":
     #     block_id="f2c43e16b09745b19ca599fafd429429"))
     # print(notion_client.client.pages.retrieve(
     #     page_id="f2c43e16b09745b19ca599fafd429429"))
+    data = notion_client.client.databases.query(
+        database_id=DatabaseType.TAG.value)
+    # すでに存在するか確認
