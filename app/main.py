@@ -41,8 +41,8 @@ async def spotify_add_notion(track_id: str):
     track = spotify_controller.get_track(track_id=track_id)
     daily_log = notion_client.get_daily_log()
     daily_log_id = daily_log.id
-    notion_client.add_track(track=track, daily_log_id=daily_log_id)
-    return track
+    url = notion_client.add_track(track=track, daily_log_id=daily_log_id)
+    return url
 
 
 @app.get("/notion/daily_log")

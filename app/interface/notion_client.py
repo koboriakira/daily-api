@@ -129,7 +129,7 @@ class NotionClient:
     def add_text_daily_log(self, date: datetime, text: str) -> None:
         """ 指定されたテキストをデイリーログの末尾に追記する """
 
-    def add_track(self, track: Track, daily_log_id: str) -> None:
+    def add_track(self, track: Track, daily_log_id: str) -> str:
         """ 指定されたトラックを音楽データベースに追加する """
         data = self.client.databases.query(
             database_id=DatabaseType.TAG.value)
@@ -137,7 +137,7 @@ class NotionClient:
         for result in data["results"]:
             title = result["properties"]["名前"]["title"][0]["text"]["content"]
             if title == track.name:
-                return
+                return result["url"]
 
         # タグを作成
         tag_page_ids = []
@@ -150,6 +150,12 @@ class NotionClient:
         result = self.client.pages.create(
             parent={"type": "database_id",
                     "database_id": DatabaseType.MUSIC.value},
+            cover={
+                "type": "external",
+                "external": {
+                        "url": track.album["images"][0]["url"]
+                }
+            },
             properties={
                 "名前": {
                     "title": [
@@ -182,9 +188,7 @@ class NotionClient:
                 },
             }
         )
-        page_id = result["id"]
-        # プレイヤーを追加
-        # 画像を追加することはできないが、NotionAPIが対応したらやりたい
+        return result["url"]
 
     def add_tag(self, name: str) -> str:
         """ 指定されたタグをタグデータベースに追加する """
@@ -286,5 +290,7 @@ if __name__ == "__main__":
     notion_client = NotionClient()
     # daily_log = notion_client.get_daily_log(date=datetime(2023, 8, 5))
     # print(daily_log)
-    print(notion_client.client.blocks.children.list(
-        block_id="deb7faca6cdd4ac3b604d6720c4e25a3"))
+    # print(notion_client.client.blocks.children.list(
+    #     block_id="f2c43e16b09745b19ca599fafd429429"))
+    print(notion_client.client.pages.retrieve(
+        page_id="f2c43e16b09745b19ca599fafd429429"))
