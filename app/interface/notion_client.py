@@ -6,7 +6,7 @@ from app.domain.notion.properties import Date
 from app.domain.notion.block import BlockFactory, Block
 from app.domain.notion.database import DatabaseType
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 
@@ -367,6 +367,36 @@ class NotionClient:
             "results"]
         return list(map(lambda b: BlockFactory.create(b), block_entities))
 
+    def get_24hours_pages(self, now: datetime) -> list:
+        """ 直近24時間以内に更新されたページを取得する """
+        result = []
+        yesterday = (now - timedelta(days=1)).timestamp()
+        while True:
+            start_cursor = search_result["next_cursor"] if len(
+                result) > 0 and "next_cursor" in search_result else None
+            search_result = notion_client.client.search(
+                filter={
+                    "value": "page",
+                    "property": "object"
+                },
+                sort={
+                    "direction": "descending",
+                    "timestamp": "last_edited_time"
+                },
+                start_cursor=start_cursor
+            )
+            last_page = search_result["results"][-1]
+            last_page_last_edited_time = datetime.fromisoformat(
+                last_page["last_edited_time"])
+            if last_page_last_edited_time.timestamp() < yesterday:
+                filtered_results = list(filter(lambda r: datetime.fromisoformat(
+                    r["last_edited_time"]).timestamp() >= yesterday, search_result["results"]))
+                result.extend(filtered_results)
+                break
+            else:
+                result.extend(search_result["results"])
+        return result
+
 
 if __name__ == "__main__":
     # python -m app.interface.notion_client
@@ -377,6 +407,19 @@ if __name__ == "__main__":
     #     block_id="f2c43e16b09745b19ca599fafd429429"))
     # print(notion_client.client.pages.retrieve(
     #     page_id="f2c43e16b09745b19ca599fafd429429"))
-    data = notion_client.client.databases.query(
-        database_id=DatabaseType.TAG.value)
+    # data = notion_client.client.databases.query(
+    #     database_id=DatabaseType.TAG.value)
     # すでに存在するか確認
+
+    # UTC+9ではなく、UTC+0で判定すること
+    now = datetime.now(tz=timezone(timedelta(hours=0)))
+    results = notion_client.get_24hours_pages(now=now)
+    # print(results[0])
+    for result in results:
+        parent = result["parent"]
+        if parent["type"] == "database_id" and parent["database_id"] in DatabaseType.ignore_updated_at():
+            continue
+        properties = result["properties"]
+        name_title = properties["名前"]["title"] if "名前" in properties else properties["Name"]["title"] if "Name" in properties else None
+        if name_title:
+            print(name_title[0]["text"]["content"])
