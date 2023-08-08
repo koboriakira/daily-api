@@ -18,18 +18,15 @@ class SpotifyController:
     def __init__(self, sp: spotipy.Spotify):
         self.sp = sp
 
-    @ classmethod
+    @classmethod
     def get_instance(cls, access_token: Optional[str] = None) -> 'SpotifyController':
         if access_token is not None:
             # アクセストークンが指定されていれば使う
             sp = spotipy.Spotify(auth=access_token)
             return cls(sp)
         # なければリフレッシュトークン経由で取得する
-        token_info = cls.__read_access_token_info()
-        print(token_info)
-        sp_oauth = cls.__get_spotify_oauth()
-        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
-        sp = spotipy.Spotify(auth=token_info['access_token'])
+        access_token = cls.__get_access_token_from_refresh_token()
+        sp = spotipy.Spotify(auth=access_token)
         return cls(sp)
 
     def current_user_recently_played(self):
@@ -78,6 +75,14 @@ class SpotifyController:
         token_info = sp_oauth.get_access_token(code)
         cls.__write_access_token_info(token_info)
         return token_info
+
+    @classmethod
+    def __get_access_token_from_refresh_token(cls) -> str:
+        token_info = cls.__read_access_token_info()
+        sp_oauth = cls.__get_spotify_oauth()
+        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+        cls.__write_access_token_info(token_info)
+        return token_info['access_token']
 
     @classmethod
     def __write_access_token_info(self, access_token_info: dict) -> None:
