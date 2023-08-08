@@ -1,4 +1,6 @@
-from app.domain.spotify.item import Items, Track
+from app.domain.spotify.item import Items
+from app.domain.spotify.track import Track
+from app.domain.spotify.album import Album
 from app.util.cache import Cache
 from app.util.global_ip_address import GlobalIpAddress
 import os
@@ -42,13 +44,25 @@ class SpotifyController:
 
         return ",".join(external_urls)
 
-    def get_track(self, track_id: str) -> Track:
-        token_info = self.__read_access_token_info()
-        sp = spotipy.Spotify(auth=token_info['access_token'])
-        track_entity = sp.track(track_id=track_id)
-        track = Track.from_dict(track_entity)
-        # TODO: trackタイプかalbumタイプかを判定する
-        return track
+    def get_track(self, track_id: str) -> Optional[Track]:
+        try:
+            token_info = self.__read_access_token_info()
+            sp = spotipy.Spotify(auth=token_info['access_token'])
+            track_entity = sp.track(track_id=track_id)
+            track = Track.from_dict(track_entity)
+            return track
+        except Exception as e:
+            return None
+
+    def get_album(self, album_id: str) -> Album:
+        try:
+            token_info = self.__read_access_token_info()
+            sp = spotipy.Spotify(auth=token_info['access_token'])
+            album_entity = sp.album(album_id=album_id)
+            return Album.from_dict(album_entity)
+        except Exception as e:
+            print(e)
+            return None
 
     @classmethod
     def get_recently_played_url(cls) -> str:

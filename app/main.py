@@ -39,10 +39,17 @@ async def spotify_add_notion(track_id: str):
     spotify_controller = SpotifyController.get_instance()
     notion_client = NotionClient()
     track = spotify_controller.get_track(track_id=track_id)
-    daily_log = notion_client.get_daily_log()
-    daily_log_id = daily_log.id
-    url = notion_client.add_track(track=track, daily_log_id=daily_log_id)
-    return url
+    if track is not None:
+        daily_log = notion_client.get_daily_log()
+        daily_log_id = daily_log.id
+        url = notion_client.add_track(track=track, daily_log_id=daily_log_id)
+        return url
+    album = spotify_controller.get_album(album_id=track_id)
+    if album is not None:
+        daily_log = notion_client.get_daily_log()
+        daily_log_id = daily_log.id
+        url = notion_client.add_album(album=album, daily_log_id=daily_log_id)
+        return url
 
 
 @app.get("/notion/daily_log")

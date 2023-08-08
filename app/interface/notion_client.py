@@ -1,6 +1,7 @@
 import os
 from notion_client import Client
-from app.domain.spotify.item import Track
+from app.domain.spotify.track import Track
+from app.domain.spotify.album import Album
 from app.domain.notion.properties import Date
 from app.domain.notion.block import BlockFactory, Block
 from app.domain.notion.database import DatabaseType
@@ -167,6 +168,16 @@ class NotionClient:
                         }
                     ]
                 },
+                "Artist": {
+                    "rich_text": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": ",".join(list(map(lambda a: a["name"], track.artists)))
+                            }
+                        }
+                    ]
+                },
                 "タグ": {
                     "type": "relation",
                     "relation": tag_page_ids,
@@ -182,9 +193,81 @@ class NotionClient:
                     "has_more": False
                 },
                 "Spotify": {
-                    # "id": "6t6m",
                     "type": "url",
                     "url": track.external_urls["spotify"]
+                },
+            }
+        )
+        return result["url"]
+
+    def add_album(self, album: Album, daily_log_id: str) -> str:
+        """ 指定されたアルバムを音楽データベースに追加する """
+        data = self.client.databases.query(
+            database_id=DatabaseType.TAG.value)
+        # すでに存在するか確認
+        for result in data["results"]:
+            title = result["properties"]["名前"]["title"][0]["text"]["content"]
+            if title == album.name:
+                return result["url"]
+
+        # タグを作成
+        tag_page_ids = []
+        for artist in album.artists:
+            page_id = self.add_tag(name=artist["name"])
+            tag_page_ids.append(page_id)
+        for genre in album.genres:
+            page_id = self.add_tag(name=genre["name"])
+            tag_page_ids.append(page_id)
+        tag_page_ids = list(map(lambda t: {"id": t}, list(set(tag_page_ids))))
+
+        # 新しいページを作成
+        result = self.client.pages.create(
+            parent={"type": "database_id",
+                    "database_id": DatabaseType.MUSIC.value},
+            cover={
+                "type": "external",
+                "external": {
+                        "url": album.images[0]["url"]
+                }
+            },
+            properties={
+                "名前": {
+                    "title": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": album.name
+                            }
+                        }
+                    ]
+                },
+                "Artist": {
+                    "rich_text": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": ",".join(list(map(lambda a: a["name"], album.artists)))
+                            }
+                        }
+                    ]
+                },
+                "タグ": {
+                    "type": "relation",
+                    "relation": tag_page_ids,
+                    "has_more": False
+                },
+                "デイリーログ": {
+                    "type": "relation",
+                    "relation": [
+                        {
+                            "id": daily_log_id
+                        }
+                    ],
+                    "has_more": False
+                },
+                "Spotify": {
+                    "type": "url",
+                    "url": album.external_urls["spotify"]
                 },
             }
         )
@@ -292,5 +375,5 @@ if __name__ == "__main__":
     # print(daily_log)
     # print(notion_client.client.blocks.children.list(
     #     block_id="f2c43e16b09745b19ca599fafd429429"))
-    print(notion_client.client.pages.retrieve(
-        page_id="f2c43e16b09745b19ca599fafd429429"))
+    # print(notion_client.client.pages.retrieve(
+    #     page_id="f2c43e16b09745b19ca599fafd429429"))
