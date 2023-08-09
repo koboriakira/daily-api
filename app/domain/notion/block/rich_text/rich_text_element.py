@@ -49,10 +49,27 @@ class RichTextElement(metaclass=ABCMeta):
                     plain_text=rich_text_element["plain_text"],
                     href=rich_text_element["href"]
                 )
+            elif mention_type == "date":
+                return RichTextMentionElement(
+                    mention_type=mention_type,
+                    start_date=mention["date"]["start"],
+                    end_date=mention["date"]["end"],
+                    annotations=rich_text_element["annotations"],
+                    plain_text=rich_text_element["plain_text"],
+                    href=rich_text_element["href"]
+                )
+            elif mention_type == "link_preview":
+                return RichTextMentionElement(
+                    mention_type=mention_type,
+                    link_preview_url=mention["link_preview"]["url"],
+                    annotations=rich_text_element["annotations"],
+                    plain_text=rich_text_element["plain_text"],
+                    href=rich_text_element["href"]
+                )
             else:
-                raise NotImplementedError
+                raise Exception("invalid mention type")
         elif type == "equation":
-            raise NotImplementedError
+            raise NotImplementedError("equation is not implemented yet")
         raise Exception("invalid type")
 
     @abstractmethod
@@ -100,11 +117,25 @@ class RichTextMentionElement(RichTextElement):
     # TODO: 日付やリンクプレビューなどもあるみたい
     # refs: https://developers.notion.com/reference/rich-text#mention
     mention_type: str  # database, page, date, link_preview
-    object_id: Optional[str]  # database_idまたはpage_id
+    object_id: Optional[str]  # database,pageのどちらかで利用。database_idまたはpage_id
+    start_date: Optional[str] = None  # dateのみ利用
+    end_date: Optional[str] = None  # dateのみ利用
+    link_preview_url: Optional[str] = None  # link_previewのみ利用
 
-    def __init__(self, mention_type: str, object_id: Optional[str] = None, annotations: Optional[dict[str, bool]] = None, plain_text: Optional[dict[str, bool]] = None, href: Optional[dict[str, bool]] = None):
+    def __init__(self,
+                 mention_type: str,
+                 object_id: Optional[str] = None,
+                 start_date: Optional[str] = None,
+                 end_date: Optional[str] = None,
+                 link_preview_url: Optional[str] = None,
+                 annotations: Optional[dict[str, bool]] = None,
+                 plain_text: Optional[dict[str, bool]] = None,
+                 href: Optional[dict[str, bool]] = None):
         self.mention_type = mention_type
         self.object_id = object_id
+        self.start_date = start_date
+        self.end_date = end_date
+        self.link_preview_url = link_preview_url
         super().__init__(annotations, plain_text, href)
 
     @staticmethod
