@@ -13,3 +13,7 @@ class Block(metaclass=ABCMeta):
     last_edited_time: Optional[str]
     parent: Optional[dict[str, str]] = None
 
+    @abstractmethod
+    def to_dict(self) -> dict:
+        """ dictに変換する。主に書き込み用 """
+        pass
