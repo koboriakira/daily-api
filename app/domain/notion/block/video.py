@@ -27,3 +27,10 @@ class Video(Block):
             caption=video["caption"],
             external_url=video_external["url"] if "url" in video_external else ""
         )
+
+    @property
+    def type(self) -> str:
+        return "video"
+
+    def to_dict_sub(self) -> dict:
+        raise NotImplementedError

@@ -17,3 +17,10 @@ class Code(Block):
             has_children=block["has_children"],
             parent=block["parent"],
         )
+
+    @property
+    def type(self) -> str:
+        return "code"
+
+    def to_dict_sub(self) -> dict:
+        raise NotImplementedError

@@ -50,14 +50,14 @@ class Paragraph(Block):
         ]
         return Paragraph(rich_text=rich_text)
 
-    def to_dict(self) -> dict:
-        paragraph = {
+    @property
+    def type(self) -> str:
+        return "paragraph"
+
+    def to_dict_sub(self) -> dict:
+        result = {
             "rich_text": self.rich_text.to_dict(),
         }
         if self.color is not None:
-            paragraph["color"] = self.color
-        return {
-            "object": "block",
-            "type": "paragraph",
-            "paragraph": paragraph
-        }
+            result["color"] = self.color
+        return result

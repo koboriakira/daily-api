@@ -25,3 +25,10 @@ class Quote(Block):
             rich_text=quote["rich_text"],
             color=quote["color"]
         )
+
+    @property
+    def type(self) -> str:
+        return "quote"
+
+    def to_dict_sub(self) -> dict:
+        raise NotImplementedError

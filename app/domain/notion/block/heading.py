@@ -29,3 +29,10 @@ class Heading(Block):
             rich_text=heading["rich_text"],
             color=heading["color"]
         )
+
+    @property
+    def type(self) -> str:
+        return "heading"
+
+    def to_dict_sub(self) -> dict:
+        raise NotImplementedError

@@ -25,3 +25,10 @@ class Bookmark(Block):
             caption=bookmark["caption"],
             bookmark_url=bookmark["url"] if "url" in bookmark else ""
         )
+
+    @property
+    def type(self) -> str:
+        return "bookmark"
+
+    def to_dict_sub(self) -> dict:
+        raise NotImplementedError

@@ -32,3 +32,10 @@ class Image(Block):
             image_type=image_type,
             image_file=image_file
         )
+
+    @property
+    def type(self) -> str:
+        return "image"
+
+    def to_dict_sub(self) -> dict:
+        raise NotImplementedError

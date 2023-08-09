@@ -33,7 +33,7 @@ class RichTextElement(metaclass=ABCMeta):
             text = rich_text_element["text"]
             return RichTextTextElement(
                 content=text["content"],
-                link_url=text["link"]["url"] if "link" in text else None,
+                link_url=text["link"]["url"] if "link" in text and text["link"] else None,
                 annotations=rich_text_element["annotations"],
                 plain_text=rich_text_element["plain_text"],
                 href=rich_text_element["href"]

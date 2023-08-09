@@ -25,3 +25,10 @@ class Embed(Block):
             caption=embed["caption"],
             embed_url=embed["url"] if "url" in embed else ""
         )
+
+    @property
+    def type(self) -> str:
+        return "embed"
+
+    def to_dict_sub(self) -> dict:
+        raise NotImplementedError

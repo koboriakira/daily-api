@@ -448,7 +448,7 @@ def create_mention_bulleted_list_item(page_id: str) -> dict:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    # daily_log = notion_client.get_daily_log(date=datetime(2023, 8, 8))
+    daily_log = notion_client.get_daily_log(date=datetime(2023, 8, 8))
     # print(daily_log)
     # print(notion_client.client.blocks.children.list(
     #     block_id="f2c43e16b09745b19ca599fafd429429"))
@@ -457,10 +457,3 @@ if __name__ == "__main__":
     # data = notion_client.client.databases.query(
     #     database_id=DatabaseType.TAG.value)
     # すでに存在するか確認
-
-    builder = RichTextBuilder.get_instance()
-    rich_text = builder.add_text("test").build()
-    paragraph = Paragraph(rich_text=rich_text)
-
-    notion_client.add_text_daily_log(
-        date=datetime(2023, 8, 9), block=paragraph)

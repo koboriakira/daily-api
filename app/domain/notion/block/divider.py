@@ -17,3 +17,10 @@ class Divider(Block):
             has_children=block["has_children"],
             parent=block["parent"],
         )
+
+    @property
+    def type(self) -> str:
+        return "divider"
+
+    def to_dict_sub(self) -> dict:
+        raise NotImplementedError

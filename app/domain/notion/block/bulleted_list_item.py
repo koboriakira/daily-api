@@ -25,3 +25,10 @@ class BulletedlistItem(Block):
             rich_text=bulleted_list_item["rich_text"],
             color=bulleted_list_item["color"]
         )
+
+    @property
+    def type(self) -> str:
+        return "bulleted_list_item"
+
+    def to_dict_sub(self) -> dict:
+        raise NotImplementedError

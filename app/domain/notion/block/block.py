@@ -5,7 +5,6 @@ from typing import Optional
 
 @dataclass
 class Block(metaclass=ABCMeta):
-    type: str  # 継承先で変わる
     id: Optional[str]
     archived: Optional[bool]
     has_children: Optional[bool]
@@ -13,7 +12,30 @@ class Block(metaclass=ABCMeta):
     last_edited_time: Optional[str]
     parent: Optional[dict[str, str]] = None
 
-    @abstractmethod
     def to_dict(self) -> dict:
-        """ dictに変換する。主に書き込み用 """
+        result = {
+            "object": "block",
+        }
+        if self.id is not None:
+            result["id"] = self.id
+        if self.archived is not None:
+            result["archived"] = self.archived
+        if self.has_children is not None:
+            result["has_children"] = self.has_children
+        if self.created_time is not None:
+            result["created_time"] = self.created_time
+        if self.last_edited_time is not None:
+            result["last_edited_time"] = self.last_edited_time
+        if self.parent is not None:
+            result["parent"] = self.parent
+        result["type"] = self.type
+        result[self.type] = self.to_dict_sub()
+
+    @abstractmethod
+    def to_dict_sub(self) -> dict:
+        pass
+
+    @property
+    @abstractmethod
+    def type(self) -> str:
         pass
