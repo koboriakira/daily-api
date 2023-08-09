@@ -4,6 +4,7 @@ from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
 from app.domain.notion.properties import Date
 from app.domain.notion.block import BlockFactory, Block, Paragraph
+from app.domain.notion.block.rich_text import RichText, RichTextBuilder
 from app.domain.notion.database import DatabaseType
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
 from datetime import datetime, timedelta, timezone
@@ -126,16 +127,14 @@ class NotionClient:
             aratas=aratas
         )
 
-    def add_text_daily_log(self, date: datetime, text: str | list[str]) -> None:
+    def add_text_daily_log(self, date: datetime, block: Block) -> None:
         """ 指定されたテキストをデイリーログの末尾に追記する """
-        input = text if isinstance(text, list) else [text]
         daily_log = self.__find_daily_log(date)
-        paragraph_list = list(
-            map(lambda t: Paragraph.of_for_insert(text=t), input))
+        child_element = block.to_dict()
+        print(child_element)
         self.client.blocks.children.append(
             block_id=daily_log["id"],
-            children=list(
-                map(lambda p: p.to_dict(), paragraph_list))
+            children=[child_element]
         )
 
     def add_track(self, track: Track, daily_log_id: str) -> str:
@@ -458,5 +457,10 @@ if __name__ == "__main__":
     # data = notion_client.client.databases.query(
     #     database_id=DatabaseType.TAG.value)
     # すでに存在するか確認
+
+    builder = RichTextBuilder.get_instance()
+    rich_text = builder.add_text("test").build()
+    paragraph = Paragraph(rich_text=rich_text)
+
     notion_client.add_text_daily_log(
-        date=datetime(2023, 8, 9), text=["test2", "test3"])
+        date=datetime(2023, 8, 9), block=paragraph)
