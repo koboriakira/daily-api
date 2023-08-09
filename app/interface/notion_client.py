@@ -54,7 +54,6 @@ class NotionClient:
         date = datetime.now() if date is None else date
         daily_log = self.__find_daily_log(date)
         properties = daily_log["properties"]
-        print(properties)
 
         # 日付
         date = Date.of("日付", properties["日付"])
@@ -127,8 +126,28 @@ class NotionClient:
             aratas=aratas
         )
 
-    def add_text_daily_log(self, date: datetime, text: str) -> None:
+    def add_text_daily_log(self, date: datetime, text: str | list[str]) -> None:
         """ 指定されたテキストをデイリーログの末尾に追記する """
+        input = text if isinstance(text, list) else [text]
+        daily_log = self.__find_daily_log(date)
+        paragraph_list = list(map(lambda t: {
+            "object": "block",
+            "type": "paragraph",
+            "paragraph": {
+                "rich_text": [
+                    {
+                        "type": "text",
+                        "text": {
+                            "content": t
+                        }
+                    }
+                ]
+            }
+        }, input))
+        self.client.blocks.children.append(
+            block_id=daily_log["id"],
+            children=paragraph_list
+        )
 
     def add_track(self, track: Track, daily_log_id: str) -> str:
         """ 指定されたトラックを音楽データベースに追加する """
@@ -281,7 +300,6 @@ class NotionClient:
         for result in data["results"]:
             title = result["properties"]["名前"]["title"][0]["text"]["content"]
             if title == name:
-                print(result)
                 return result["id"]
         # 作成
         result = self.client.pages.create(
@@ -367,7 +385,24 @@ class NotionClient:
             "results"]
         return list(map(lambda b: BlockFactory.create(b), block_entities))
 
-    def get_24hours_pages(self, now: datetime) -> list:
+    def add_24hours_pages_in_daily_log(self) -> None:
+        """ 直近24時間以内に更新されたページを、当日のデイリーログに追加する"""
+        daily_log = notion_client.get_daily_log()
+
+        # 更新のあったページのID一覧を取得
+        now = datetime.now(tz=timezone(timedelta(hours=0)))
+        result = list(notion_client.get_24hours_pages(now=now))
+        page_id_list = list(map(lambda page: page["id"], result))
+
+        # デイリーログをに追加
+        mention_bulleted_list_items = list(
+            map(lambda: create_mention_bulleted_list_item, page_id_list))
+        notion_client.client.blocks.children.append(
+            block_id=daily_log.id,
+            children=mention_bulleted_list_items
+        )
+
+    def get_24hours_pages(self, now: datetime):
         """ 直近24時間以内に更新されたページを取得する """
         result = []
         yesterday = (now - timedelta(days=1)).timestamp()
@@ -395,13 +430,37 @@ class NotionClient:
                 break
             else:
                 result.extend(search_result["results"])
-        return result
+        for page in result:
+            parent = page["parent"]
+            if parent["type"] == "database_id" and parent["database_id"] in DatabaseType.ignore_updated_at():
+                continue
+            yield page
+
+
+def create_mention_bulleted_list_item(page_id: str) -> dict:
+    return {
+        "object": "block",
+        "type": "bulleted_list_item",
+        "bulleted_list_item": {
+            "rich_text": [
+                {
+                    "type": "mention",
+                    "mention": {
+                        "type": "page",
+                        "page": {
+                            "id": page_id
+                        }
+                    },
+                },
+            ]
+        }
+    }
 
 
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    # daily_log = notion_client.get_daily_log(date=datetime(2023, 8, 5))
+    # daily_log = notion_client.get_daily_log(date=datetime(2023, 8, 8))
     # print(daily_log)
     # print(notion_client.client.blocks.children.list(
     #     block_id="f2c43e16b09745b19ca599fafd429429"))
@@ -410,16 +469,5 @@ if __name__ == "__main__":
     # data = notion_client.client.databases.query(
     #     database_id=DatabaseType.TAG.value)
     # すでに存在するか確認
-
-    # UTC+9ではなく、UTC+0で判定すること
-    now = datetime.now(tz=timezone(timedelta(hours=0)))
-    results = notion_client.get_24hours_pages(now=now)
-    # print(results[0])
-    for result in results:
-        parent = result["parent"]
-        if parent["type"] == "database_id" and parent["database_id"] in DatabaseType.ignore_updated_at():
-            continue
-        properties = result["properties"]
-        name_title = properties["名前"]["title"] if "名前" in properties else properties["Name"]["title"] if "Name" in properties else None
-        if name_title:
-            print(name_title[0]["text"]["content"])
+    notion_client.add_text_daily_log(
+        date=datetime(2023, 8, 9), text=["test2", "test3"])
