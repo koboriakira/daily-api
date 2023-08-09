@@ -9,3 +9,4 @@ from .divider import Divider
 from .bulleted_list_item import BulletedlistItem
 from .embed import Embed
 from .bookmark import Bookmark
+from .code import Code
