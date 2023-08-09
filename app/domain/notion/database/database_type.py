@@ -6,6 +6,7 @@ class DatabaseType(Enum):
     各データベースのID
     """
 
+    DAILY_LOG = "58da568b-4e63-4a46-9ffe-36adeb59ab30"
     MUSIC = "ef2d1550-3edb-4848-b236-229fb83d31e0"
     TAG = "8356ec79-ce5f-4aea-bad2-c8dc49098885"
     HABIT_TRACKER_ALLDAY = "752e93c9-9a9c-4bef-8d1f-7702439f658a"
@@ -19,7 +20,7 @@ class DatabaseType(Enum):
         更新日時を無視するデータベースのIDを返す
         """
         return [
-            DatabaseType.MUSIC.value,
+            DatabaseType.DAILY_LOG.value,
             DatabaseType.TAG.value,
             DatabaseType.HABIT_TRACKER_ALLDAY.value,
             DatabaseType.HABIT_TRACKER_MORNING.value,

@@ -376,17 +376,17 @@ class NotionClient:
 
     def add_24hours_pages_in_daily_log(self) -> None:
         """ 直近24時間以内に更新されたページを、当日のデイリーログに追加する"""
-        daily_log = notion_client.get_daily_log()
+        daily_log = self.get_daily_log()
 
         # 更新のあったページのID一覧を取得
         now = datetime.now(tz=timezone(timedelta(hours=0)))
-        result = list(notion_client.get_24hours_pages(now=now))
+        result = list(self.get_24hours_pages(now=now))
         page_id_list = list(map(lambda page: page["id"], result))
 
         # デイリーログをに追加
         mention_bulleted_list_items = list(
-            map(lambda: create_mention_bulleted_list_item, page_id_list))
-        notion_client.client.blocks.children.append(
+            map(lambda page_id: create_mention_bulleted_list_item(page_id=page_id), page_id_list))
+        self.client.blocks.children.append(
             block_id=daily_log.id,
             children=mention_bulleted_list_items
         )
@@ -398,7 +398,7 @@ class NotionClient:
         while True:
             start_cursor = search_result["next_cursor"] if len(
                 result) > 0 and "next_cursor" in search_result else None
-            search_result = notion_client.client.search(
+            search_result = self.client.search(
                 filter={
                     "value": "page",
                     "property": "object"
