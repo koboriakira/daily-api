@@ -30,6 +30,7 @@ class Block(metaclass=ABCMeta):
             result["parent"] = self.parent
         result["type"] = self.type
         result[self.type] = self.to_dict_sub()
+        return result
 
     @abstractmethod
     def to_dict_sub(self) -> dict:

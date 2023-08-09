@@ -37,17 +37,7 @@ class Paragraph(Block):
         )
 
     @staticmethod
-    def of_for_insert(text: str) -> "Paragraph":
-        """ 書き込み用のParagraphを生成する """
-        rich_text = [
-            {
-                "type": "text",
-                "text": {
-                    "content": text,
-                    "link": None
-                }
-            }
-        ]
+    def from_rich_text(rich_text: RichText) -> "Paragraph":
         return Paragraph(rich_text=rich_text)
 
     @property

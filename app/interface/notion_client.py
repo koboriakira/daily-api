@@ -127,8 +127,9 @@ class NotionClient:
             aratas=aratas
         )
 
-    def add_text_daily_log(self, date: datetime, block: Block) -> None:
+    def add_daily_log(self, block: Block, date: Optional[datetime] = None) -> None:
         """ 指定されたテキストをデイリーログの末尾に追記する """
+        date = datetime.now() if date is None else date
         daily_log = self.__find_daily_log(date)
         child_element = block.to_dict()
         print(child_element)

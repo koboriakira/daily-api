@@ -1,3 +1,7 @@
+from app.domain.notion.block.rich_text import RichText, RichTextBuilder
+from app.domain.notion.block import BlockFactory, Block, Paragraph
+from pydantic import BaseModel
+from fastapi import FastAPI
 from fastapi import FastAPI, Request, Response, Header
 from app.controller.spotify_controller import SpotifyController
 from app.interface.notion_client import NotionClient
@@ -52,7 +56,20 @@ async def spotify_add_notion(track_id: str):
         return url
 
 
-@app.get("/notion/daily_log")
+class Text(BaseModel):
+    content: list[str]
+
+
+@app.post("/notion/add_daily_log")
+async def add_text_daily_log(text: Text):
+    notion_client = NotionClient()
+    for text_content in text.content:
+        rich_text = RichTextBuilder.get_instance().add_text(text_content).build()
+        paragraph = Paragraph.from_rich_text(rich_text=rich_text)
+        notion_client.add_daily_log(block=paragraph)
+
+
+@ app.get("/notion/daily_log")
 async def callback(Authorization: Union[str, None] = Header(default=None)):
     AuthorizeChecker.validate(access_token=Authorization)
     notion_client = NotionClient()
