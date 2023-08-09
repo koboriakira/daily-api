@@ -3,7 +3,7 @@ from notion_client import Client
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
 from app.domain.notion.properties import Date
-from app.domain.notion.block import BlockFactory, Block
+from app.domain.notion.block import BlockFactory, Block, Paragraph
 from app.domain.notion.database import DatabaseType
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
 from datetime import datetime, timedelta, timezone
@@ -130,23 +130,12 @@ class NotionClient:
         """ 指定されたテキストをデイリーログの末尾に追記する """
         input = text if isinstance(text, list) else [text]
         daily_log = self.__find_daily_log(date)
-        paragraph_list = list(map(lambda t: {
-            "object": "block",
-            "type": "paragraph",
-            "paragraph": {
-                "rich_text": [
-                    {
-                        "type": "text",
-                        "text": {
-                            "content": t
-                        }
-                    }
-                ]
-            }
-        }, input))
+        paragraph_list = list(
+            map(lambda t: Paragraph.of_for_insert(text=t), input))
         self.client.blocks.children.append(
             block_id=daily_log["id"],
-            children=paragraph_list
+            children=list(
+                map(lambda p: p.to_dict(), paragraph_list))
         )
 
     def add_track(self, track: Track, daily_log_id: str) -> str:
