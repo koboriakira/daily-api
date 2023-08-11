@@ -374,13 +374,16 @@ class NotionClient:
             "results"]
         return list(map(lambda b: BlockFactory.create(b), block_entities))
 
-    def add_24hours_pages_in_daily_log(self) -> None:
+    def add_24hours_pages_in_daily_log(self, date: str) -> None:
         """ 直近24時間以内に更新されたページを、当日のデイリーログに追加する"""
-        daily_log = self.get_daily_log()
+        now = datetime.fromisoformat('2023-08-11')
+        daily_log = self.get_daily_log(now)
+        from_date = now - timedelta(hours=9)
+        to_date = now + timedelta(hours=15)
 
         # 更新のあったページのID一覧を取得
         now = datetime.now(tz=timezone(timedelta(hours=0)))
-        result = list(self.get_24hours_pages(now=now))
+        result = list(self.get_pages(from_date=from_date, to_date=to_date))
         page_id_list = list(map(lambda page: page["id"], result))
 
         # デイリーログをに追加
@@ -391,10 +394,9 @@ class NotionClient:
             children=mention_bulleted_list_items
         )
 
-    def get_24hours_pages(self, now: datetime):
+    def get_pages(self, from_date: datetime, to_date: datetime):
         """ 直近24時間以内に更新されたページを取得する """
         result = []
-        yesterday = (now - timedelta(days=1)).timestamp()
         while True:
             start_cursor = search_result["next_cursor"] if len(
                 result) > 0 and "next_cursor" in search_result else None
@@ -412,18 +414,24 @@ class NotionClient:
             last_page = search_result["results"][-1]
             last_page_last_edited_time = datetime.fromisoformat(
                 last_page["last_edited_time"])
-            if last_page_last_edited_time.timestamp() < yesterday:
-                filtered_results = list(filter(lambda r: datetime.fromisoformat(
-                    r["last_edited_time"]).timestamp() >= yesterday, search_result["results"]))
+            if last_page_last_edited_time.timestamp() < from_date:
+                filtered_results = list(filter(lambda r: valid_datetime(datetime.fromisoformat(
+                    r["last_edited_time"]), from_date, to_date), search_result["results"]))
                 result.extend(filtered_results)
                 break
             else:
-                result.extend(search_result["results"])
+                filtered_results = list(filter(lambda r: valid_datetime(datetime.fromisoformat(
+                    r["last_edited_time"]), from_date, to_date), search_result["results"]))
+                result.extend(filtered_results)
         for page in result:
             parent = page["parent"]
             if parent["type"] == "database_id" and parent["database_id"] in DatabaseType.ignore_updated_at():
                 continue
             yield page
+
+
+def valid_datetime(target: datetime, from_date: datetime, to_date: datetime) -> bool:
+    return from_date.timestamp() <= target.timestamp() and target.timestamp() <= to_date.timestamp()
 
 
 def create_mention_bulleted_list_item(page_id: str) -> dict:
