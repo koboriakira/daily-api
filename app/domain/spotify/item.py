@@ -15,6 +15,9 @@ class Item:
         context = obj["context"]
         return Item(track, played_at, context)
 
+    def get_spotify_url(self) -> str:
+        return self.track.spotify_url
+
 
 @dataclass(frozen=True)
 class Items:

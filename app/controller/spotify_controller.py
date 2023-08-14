@@ -1,3 +1,5 @@
+from app.model.spotify.track import TrackEntityConverter
+from app.model.spotify.track import Track as TrackEntity
 from app.domain.spotify.item import Items
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
@@ -29,17 +31,16 @@ class SpotifyController:
         sp = spotipy.Spotify(auth=access_token)
         return cls(sp)
 
-    def current_user_recently_played(self):
+    def current_user_recently_played(self) -> list[TrackEntity]:
         token_info = self.__read_access_token_info()
         sp = spotipy.Spotify(auth=token_info['access_token'])
         recently_played = sp.current_user_recently_played()
 
         items = Items.from_dict_list(values=recently_played['items'])
+        track_entities = list(set(
+            map(lambda item: TrackEntityConverter.convertToEntity(item.track), items.values)))
 
-        external_urls = list(set(
-            map(lambda item: item.context["external_urls"]["spotify"], items.values)))
-
-        return ",".join(external_urls)
+        return track_entities
 
     def get_track(self, track_id: str) -> Optional[Track]:
         try:
