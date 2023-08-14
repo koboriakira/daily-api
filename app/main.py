@@ -1,5 +1,6 @@
 from app.domain.notion.block.rich_text import RichText, RichTextBuilder
 from app.domain.notion.block import BlockFactory, Block, Paragraph
+from app.router import healthcheck
 from pydantic import BaseModel
 from fastapi import FastAPI
 from fastapi import FastAPI, Request, Response, Header
@@ -10,15 +11,19 @@ from typing import Union
 
 app = FastAPI()
 
+app.include_router(healthcheck.router,
+                   prefix="/healthcheck", tags=["healthcheck"])
+
 
 @app.get("/")
 async def index():
+    """ 疎通確認用のAPI """
     return {"message": "Hello World"}
 
 
-@app.get("/spotify/access_token")
+@app.get("/spotify/access_token/")
 async def get_recently_played():
-    # ユーザーをSpotifyの認証ページにリダイレクト
+    """ Spotifyの認証ページにリダイレクト """
     auth_url = SpotifyController.get_recently_played_url()
     print(auth_url)
     return Response(headers={"Location": auth_url}, status_code=303)
@@ -26,6 +31,10 @@ async def get_recently_played():
 
 @app.get("/spotify/access_token_callback")
 async def callback(request: Request):
+    """
+    Spotifyの認証後のコールバック用URL。
+    直接呼び出すことはない。
+    """
     # 認証コードを取得
     code = request.query_params.get('code')
     return SpotifyController.authorize(code=code)
