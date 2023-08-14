@@ -62,7 +62,7 @@ class SpotifyController:
             return None
 
     @classmethod
-    def get_recently_played_url(cls) -> str:
+    def get_auth_url(cls) -> str:
         """ ユーザーをSpotifyの認証ページを生成する """
         sp_oauth = cls.__get_spotify_oauth()
         auth_url = sp_oauth.get_authorize_url()
@@ -103,7 +103,7 @@ class SpotifyController:
     def get_callback_url(cls) -> str:
         """ 認証のコールバック用URLを取得 """
         # NOTE: 返却値が変わる場合は、Spotifyのアプリ設定画面のRedirect URIsも変更する必要がある
-        path = "spotify/access_token_callback"
+        path = "spotify/access_token/callback"
         if os.getenv('ENVIRONMENT') == "development":
             return f"http://localhost:5023/{path}"
         else:
