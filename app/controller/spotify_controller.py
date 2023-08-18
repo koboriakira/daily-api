@@ -1,5 +1,5 @@
-from app.model.spotify.track import TrackEntityConverter
-from app.model.spotify.track import Track as TrackEntity
+from app.model.spotify.track import RecentlyPlayedTrackConverter
+from app.model.spotify.track import RecentlyPlayedTrack as TrackEntity
 from app.domain.spotify.item import Items
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
@@ -38,7 +38,7 @@ class SpotifyController:
 
         items = Items.from_dict_list(values=recently_played['items'])
         track_entities = list(set(
-            map(lambda item: TrackEntityConverter.convertToEntity(item.track), items.values)))
+            map(lambda item: RecentlyPlayedTrackConverter.from_item(item), items.values)))
 
         return track_entities
 
