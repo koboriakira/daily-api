@@ -7,10 +7,12 @@ from app.domain.notion.block.quote import Quote
 from app.domain.notion.block.heading import Heading
 from app.domain.notion.block.divider import Divider
 from app.domain.notion.block.bulleted_list_item import BulletedlistItem
+from app.domain.notion.block.numbered_list_item import NumberedListItem
 from app.domain.notion.block.embed import Embed
 from app.domain.notion.block.bookmark import Bookmark
 from app.domain.notion.block.image import Image
 from app.domain.notion.block.code import Code
+from app.domain.notion.block.table import Table
 from typing import Union
 
 
@@ -47,6 +49,10 @@ class BlockFactory():
                 return Image.of(block)
             case BlockType.CODE:
                 return Code.of(block)
+            case BlockType.TABLE:
+                return Table.of(block)
+            case BlockType.NUMBERED_LIST_ITEM:
+                return NumberedListItem.of(block)
             case _:
                 print(block)
                 raise ValueError(
