@@ -31,10 +31,10 @@ class SpotifyController:
         sp = spotipy.Spotify(auth=access_token)
         return cls(sp)
 
-    def current_user_recently_played(self) -> list[TrackEntity]:
+    def current_user_recently_played(self, after: Optional[float]) -> list[TrackEntity]:
         token_info = self.__read_access_token_info()
         sp = spotipy.Spotify(auth=token_info['access_token'])
-        recently_played = sp.current_user_recently_played()
+        recently_played = sp.current_user_recently_played(after=after)
 
         items = Items.from_dict_list(values=recently_played['items'])
         track_entities = list(set(
