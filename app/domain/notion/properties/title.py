@@ -7,14 +7,13 @@ from typing import Optional
 class Title(Property):
     text: str
     value: list[dict]
-    id: str
     type: str = "title"
 
-    def __init__(self, name: str, id: str, value: list[dict]):
+    def __init__(self, name: str, id: Optional[str] = None, value: list[dict] = [], text: Optional[str] = None):
         self.name = name
         self.id = id
         self.value = value
-        self.text = "".join([item["plain_text"] for item in value])
+        self.text = text
 
     @classmethod
     def from_properties(cls, properties: dict) -> "Title":
@@ -27,12 +26,20 @@ class Title(Property):
         raise Exception(f"Title property not found. properties: {properties}")
 
     def __dict__(self):
+        result = {
+            "title": [
+                {
+                    "type": "text",
+                    "text": {
+                        "content": self.text
+                    }
+                }
+            ]
+        }
+        if self.id is not None:
+            result["title"]["id"] = self.id
         return {
-            self.name: {
-                "id": self.id,
-                "type": self.type,
-                "title": self.value
-            }
+            self.name: result
         }
 
     @staticmethod
@@ -40,5 +47,13 @@ class Title(Property):
         return Title(
             name=name,
             id=param["id"],
-            value=param["title"]
+            value=param["title"],
+            text="".join([item["plain_text"] for item in param["title"]])
+        )
+
+    @ staticmethod
+    def from_plain_text(name: str, text: str) -> "Title":
+        return Title(
+            name=name,
+            text=text,
         )

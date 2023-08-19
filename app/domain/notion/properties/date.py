@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from app.domain.notion.properties.property import Property
 from typing import Optional
+from datetime import date
 
 
 @dataclass
@@ -10,9 +11,9 @@ class Date(Property):
     time_zone: Optional[str] = None
     type: str = "date"
 
-    def __init__(self, name: str, id: str, start: str, end: str, time_zone: str):
-        self.id = id
+    def __init__(self, name: str, id: Optional[str] = None, start: str = None, end: str = None, time_zone: str = None):
         self.name = name
+        self.id = id
         self.start = start
         self.end = end
         self.time_zone = time_zone
@@ -25,6 +26,13 @@ class Date(Property):
             start=param["date"]["start"],
             end=param["date"]["end"],
             time_zone=param["date"]["time_zone"]
+        )
+
+    @staticmethod
+    def from_start_date(name: str, start_date: date) -> "Date":
+        return Date(
+            name=name,
+            start=start_date.isoformat(),
         )
 
     def __dict__(self):

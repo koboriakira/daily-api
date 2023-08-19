@@ -2,7 +2,7 @@ import os
 from notion_client import Client
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
-from app.domain.notion.properties import Date
+from app.domain.notion.properties import Date, Title, Relation, Properties
 from app.domain.notion.database.database_type import DatabaseType
 from app.domain.notion.block import BlockFactory, Block, Paragraph
 from app.domain.notion.block.rich_text import RichText, RichTextBuilder
@@ -334,7 +334,6 @@ class NotionClient:
             if daily_log is None:
                 daily_log = self.__create_daily_log_page(
                     date=date, weekly_log_id=weekly_log_entity["id"])
-            return
 
     def __find_daily_log(self, date: datetime) -> Optional[dict]:
         data = self.client.databases.query(
@@ -346,42 +345,20 @@ class NotionClient:
         return None
 
     def __create_daily_log_page(self, date: date, weekly_log_id: str) -> dict:
-        # date = Date.from_start_date(name="日付", start_date=date)
+        date_field = Date.from_start_date(
+            name="日付", start_date=date)
+        title_field = Title.from_plain_text(
+            name="名前", text=date.isoformat())
+        relation_field = Relation.from_id_list(
+            name="💭 ウィークリーログ", id_list=[weekly_log_id])
+
+        properties = Properties([date_field, title_field, relation_field])
         self.client.pages.create(
             parent={
                 "type": "database_id",
                 "database_id": DatabaseType.DAILY_LOG.value
             },
-            properties={
-                "名前": {
-                    "title": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": date.isoformat()
-                            }
-                        }
-                    ]
-                },
-                "日付": {
-                    "type": "date",
-                    "date": {
-                        "start": date.isoformat(),
-                        "end": None,
-                        "time_zone": None
-                    }
-                },
-                "💭 ウィークリーログ": {
-                    "type": "relation",
-                    "relation": [
-                        {
-                            "id": weekly_log_id
-                        }
-                    ],
-                    "has_more": False
-                },
-            }
-        )
+            properties=properties.__dict__())
 
     def __find_weekly_log(self, year: int, isoweeknum: int) -> Optional[dict]:
         data = self.client.databases.query(

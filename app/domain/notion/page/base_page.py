@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from app.domain.notion.properties.property import Properties
+from app.domain.notion.properties import Properties
 from app.domain.notion.block import Block
 from typing import Optional
 
