@@ -3,11 +3,12 @@ from notion_client import Client
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
 from app.domain.notion.properties import Date
+from app.domain.notion.database.database_type import DatabaseType
 from app.domain.notion.block import BlockFactory, Block, Paragraph
 from app.domain.notion.block.rich_text import RichText, RichTextBuilder
 from app.domain.notion.database import DatabaseType
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from typing import Optional
 
 
@@ -54,6 +55,8 @@ class NotionClient:
     def get_daily_log(self, date: Optional[datetime] = None) -> DailyLog:
         date = datetime.now() if date is None else date
         daily_log = self.__find_daily_log(date)
+        if daily_log is None:
+            raise Exception("Not found")
         properties = daily_log["properties"]
 
         # 日付
@@ -311,14 +314,116 @@ class NotionClient:
         )
         return result["id"]
 
-    def __find_daily_log(self, date: datetime) -> dict:
+    def create_weekly_log(self, year: int, isoweeknum: int) -> None:
+        """ 指定された年と週から週報ページを作成する """
+        # ウィークリーログを作成
+        weekly_log_entity = self.__find_weekly_log(year, isoweeknum)
+        if weekly_log_entity is None:
+            weekly_log_entity = self.__create_weekly_log_page(year, isoweeknum)
+        print(weekly_log_entity)
+
+        # 開始日から終了日までのデイリーログを作成
+        # 指定さらた年とISO週から開始日、終了日を取得
+        start_date = datetime.strptime(
+            f"{year}-{isoweeknum}-1", "%G-%V-%u")
+        # datetimeをdateに変換
+        start_date = datetime.date(start_date)
+        for i in range(7):
+            date = start_date + timedelta(days=i)
+            daily_log = self.__find_daily_log(date)
+            if daily_log is None:
+                daily_log = self.__create_daily_log_page(
+                    date=date, weekly_log_id=weekly_log_entity["id"])
+            return
+
+    def __find_daily_log(self, date: datetime) -> Optional[dict]:
         data = self.client.databases.query(
-            database_id="58da568b4e634a469ffe36adeb59ab30")
+            database_id=DatabaseType.DAILY_LOG.value)
         for result in data["results"]:
             title = result["properties"]["名前"]["title"][0]["text"]["content"]
             if title == datetime.strftime(date, "%Y-%m-%d"):
                 return result
-        raise Exception("Not found")
+        return None
+
+    def __create_daily_log_page(self, date: date, weekly_log_id: str) -> dict:
+        # date = Date.from_start_date(name="日付", start_date=date)
+        self.client.pages.create(
+            parent={
+                "type": "database_id",
+                "database_id": DatabaseType.DAILY_LOG.value
+            },
+            properties={
+                "名前": {
+                    "title": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": date.isoformat()
+                            }
+                        }
+                    ]
+                },
+                "日付": {
+                    "type": "date",
+                    "date": {
+                        "start": date.isoformat(),
+                        "end": None,
+                        "time_zone": None
+                    }
+                },
+                "💭 ウィークリーログ": {
+                    "type": "relation",
+                    "relation": [
+                        {
+                            "id": weekly_log_id
+                        }
+                    ],
+                    "has_more": False
+                },
+            }
+        )
+
+    def __find_weekly_log(self, year: int, isoweeknum: int) -> Optional[dict]:
+        data = self.client.databases.query(
+            database_id=DatabaseType.WEEKLY_LOG.value)
+        for result in data["results"]:
+            title = result["properties"]["名前"]["title"][0]["text"]["content"]
+            print(title, f"{year}-Week{isoweeknum}")
+            if title == f"{year}-Week{isoweeknum}":
+                return result
+        return None
+
+    def __create_weekly_log_page(self, year: int, isoweeknum: int) -> dict:
+        start_date = datetime.strptime(
+            f"{year}-{isoweeknum}-1", "%G-%V-%u")
+        start_date = datetime.date(start_date)
+        end_date = start_date + timedelta(days=6)
+        self.client.pages.create(
+            parent={
+                "type": "database_id",
+                "database_id": DatabaseType.WEEKLY_LOG.value
+            },
+            properties={
+                "名前": {
+                    "title": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": f"{year}-Week{isoweeknum}"
+                            }
+                        }
+                    ]
+                },
+                "期間": {
+                    "type": "date",
+                    "date": {
+                        "start": start_date.isoformat(),
+                        "end": end_date.isoformat(),
+                        "time_zone": None
+                    }
+                },
+            }
+        )
 
     def __find_recipe(self, page_id: str) -> Recipe:
         result = self.client.pages.retrieve(page_id=page_id)
@@ -457,7 +562,7 @@ def create_mention_bulleted_list_item(page_id: str) -> dict:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    daily_log = notion_client.get_daily_log(date=datetime(2023, 8, 8))
+    notion_client.create_weekly_log(year=2023, isoweeknum=34)
     # print(daily_log)
     # print(notion_client.client.blocks.children.list(
     #     block_id="f2c43e16b09745b19ca599fafd429429"))

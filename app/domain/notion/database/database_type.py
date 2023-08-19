@@ -13,6 +13,7 @@ class DatabaseType(Enum):
     HABIT_TRACKER_MORNING = "df0ee11c-90a8-46d5-b8bf-aac52f8d8bcd"
     HABIT_TRACKER_NIGHT = "a759f224-ebb8-40c0-9047-6d7f88835e65"
     INGREDIENTS = "dba77be1-c1a6-40a2-858e-85878ee55b0d"
+    WEEKLY_LOG = "3ae412cf-6c87-4119-a9c6-ffdb2eee2a1e"
 
     @staticmethod
     def ignore_updated_at() -> list[str]:
