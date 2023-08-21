@@ -35,6 +35,14 @@ class Date(Property):
             start=start_date.isoformat(),
         )
 
+    @staticmethod
+    def from_range(name: str, start: date, end: date) -> "Date":
+        return Date(
+            name=name,
+            start=start.isoformat(),
+            end=end.isoformat(),
+        )
+
     def __dict__(self):
         return {
             self.name: {

@@ -375,31 +375,18 @@ class NotionClient:
             f"{year}-{isoweeknum}-1", "%G-%V-%u")
         start_date = datetime.date(start_date)
         end_date = start_date + timedelta(days=6)
+
+        title_field = Title.from_plain_text(
+            name="名前", text=f"{year}-Week{isoweeknum}")
+        date_field = Date.from_range(
+            name="日付", start=start_date, end=end_date)
+        properties = Properties([date_field, title_field])
         self.client.pages.create(
             parent={
                 "type": "database_id",
                 "database_id": DatabaseType.WEEKLY_LOG.value
             },
-            properties={
-                "名前": {
-                    "title": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": f"{year}-Week{isoweeknum}"
-                            }
-                        }
-                    ]
-                },
-                "期間": {
-                    "type": "date",
-                    "date": {
-                        "start": start_date.isoformat(),
-                        "end": end_date.isoformat(),
-                        "time_zone": None
-                    }
-                },
-            }
+            properties=properties.__dict__()
         )
 
     def __find_recipe(self, page_id: str) -> Recipe:
