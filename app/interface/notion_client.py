@@ -20,38 +20,6 @@ class NotionClient:
         response = self.client.search(query=query)
         return response["results"]
 
-    def test_create_new_page_in_database(self):
-        database_id = "1cb454d6-205c-4eda-9fed-a1cf371305a3"
-        self.client.pages.create(
-            parent={"type": "database_id", "database_id": database_id},
-            properties={
-                "title": [
-                    {
-                        "type": "text",
-                        "text": {
-                            "content": "Test"
-                        }
-                    }
-                ]
-            },
-            children=[
-                {
-                    "object": "block",
-                    "type": "heading_1",
-                    "heading_1": {
-                        "rich_text": [
-                            {
-                                "type": "text",
-                                "text": {
-                                    "content": "Test"
-                                }
-                            }
-                        ]
-                    }
-                },
-            ]
-        )
-
     def get_daily_log(self, date: Optional[datetime] = None) -> DailyLog:
         date = datetime.now() if date is None else date
         daily_log = self.__find_daily_log(date)
@@ -350,7 +318,17 @@ class NotionClient:
                 self.__update_page(page_id=result["id"],
                                    properties=[updated_status])
 
-    def __update_page(self, page_id: str, properties: list[Property]) -> None:
+    def __create_page_in_database(self, database_type: DatabaseType, properties: list[Property] = []) -> dict:
+        """ データベース上にページを新規作成する """
+        return self.client.pages.create(
+            parent={
+                "type": "database_id",
+                "database_id": database_type.value
+            },
+            properties=Properties(values=properties).__dict__()
+        )
+
+    def __update_page(self, page_id: str, properties: list[Property] = []) -> None:
         """ 指定されたページを更新する """
         self.client.pages.update(
             page_id=page_id,
@@ -367,20 +345,13 @@ class NotionClient:
         return None
 
     def __create_daily_log_page(self, date: date, weekly_log_id: str) -> dict:
-        date_field = Date.from_start_date(
-            name="日付", start_date=date)
-        title_field = Title.from_plain_text(
-            name="名前", text=date.isoformat())
-        relation_field = Relation.from_id_list(
-            name="💭 ウィークリーログ", id_list=[weekly_log_id])
-
-        properties = Properties([date_field, title_field, relation_field])
-        self.client.pages.create(
-            parent={
-                "type": "database_id",
-                "database_id": DatabaseType.DAILY_LOG.value
-            },
-            properties=properties.__dict__())
+        return self.__create_page_in_database(
+            database_type=DatabaseType.DAILY_LOG,
+            properties=[
+                Date.from_start_date(name="日付", start_date=date),
+                Title.from_plain_text(name="名前", text=date.isoformat()),
+                Relation.from_id_list(name="💭 ウィークリーログ", id_list=[weekly_log_id])]
+        )
 
     def __find_weekly_log(self, year: int, isoweeknum: int) -> Optional[dict]:
         data = self.client.databases.query(
@@ -393,22 +364,19 @@ class NotionClient:
         return None
 
     def __create_weekly_log_page(self, year: int, isoweeknum: int) -> dict:
+        title_text = f"{year}-Week{isoweeknum}"
         start_date = datetime.strptime(
             f"{year}-{isoweeknum}-1", "%G-%V-%u")
         start_date = datetime.date(start_date)
         end_date = start_date + timedelta(days=6)
 
-        title_field = Title.from_plain_text(
-            name="名前", text=f"{year}-Week{isoweeknum}")
-        date_field = Date.from_range(
-            name="日付", start=start_date, end=end_date)
-        properties = Properties([date_field, title_field])
-        self.client.pages.create(
-            parent={
-                "type": "database_id",
-                "database_id": DatabaseType.WEEKLY_LOG.value
-            },
-            properties=properties.__dict__()
+        return self.__create_page_in_database(
+            database_type=DatabaseType.WEEKLY_LOG,
+            properties=[
+                Title.from_plain_text(
+                    name="名前", text=title_text),
+                Date.from_range(name="日付", start=start_date, end=end_date),
+            ]
         )
 
     def __find_recipe(self, page_id: str) -> Recipe:
