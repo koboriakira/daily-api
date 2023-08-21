@@ -349,9 +349,12 @@ class NotionClient:
             lambda r: r["id"], properties[key]["relation"]))
 
     def __get_block_children(self, page_id: str) -> list:
-        block_entities = self.client.blocks.children.list(block_id=page_id)[
+        block_entities = self.__list_blocks(block_id=page_id)[
             "results"]
         return list(map(lambda b: BlockFactory.create(b), block_entities))
+
+    def __list_blocks(self, block_id: str) -> dict:
+        return self.client.blocks.children.list(block_id=block_id)
 
     def __append_blocks(self, block_id: str, block: Block | list[Block]) -> None:
         if isinstance(block, Block):
@@ -451,12 +454,4 @@ def create_mention_bulleted_list_item(page_id: str) -> dict:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    # notion_client.create_weekly_log(year=2023, isoweeknum=34)
-    # print(daily_log)
-    # print(notion_client.client.blocks.children.list(
-    #     block_id="f2c43e16b09745b19ca599fafd429429"))
-    # print(notion_client.client.pages.retrieve(
-    #     page_id="f2c43e16b09745b19ca599fafd429429"))
-    # すでに存在するか確認
-
-    notion_client.set_today_to_inprogress()
+    # notion_client.set_today_to_inprogress()
