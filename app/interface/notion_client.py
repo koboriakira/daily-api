@@ -112,13 +112,12 @@ class NotionClient:
 
     def add_track(self, track: Track, daily_log_id: str) -> str:
         """ 指定されたトラックを音楽データベースに追加する """
-        data = self.client.databases.query(
-            database_id=DatabaseType.MUSIC.value)
         # すでに存在するか確認
-        for result in data["results"]:
-            title = result["properties"]["名前"]["title"][0]["text"]["content"]
-            if title == track.name:
-                return result["url"]
+        data = self.__query_with_title_filter(
+            database_type=DatabaseType.MUSIC,
+            title_filter=track.name)
+        if data is not None:
+            return data["url"]
 
         # タグを作成
         tag_page_ids = []
@@ -146,13 +145,12 @@ class NotionClient:
 
     def add_album(self, album: Album, daily_log_id: str) -> str:
         """ 指定されたアルバムを音楽データベースに追加する """
-        data = self.client.databases.query(
-            database_id=DatabaseType.MUSIC.value)
         # すでに存在するか確認
-        for result in data["results"]:
-            title = result["properties"]["名前"]["title"][0]["text"]["content"]
-            if title == album.name:
-                return result["url"]
+        data = self.__query_with_title_filter(
+            database_type=DatabaseType.MUSIC,
+            title_filter=album.name)
+        if data is not None:
+            return result["url"]
 
         # タグを作成
         tag_page_ids = []
@@ -183,14 +181,12 @@ class NotionClient:
 
     def add_tag(self, name: str) -> str:
         """ 指定されたタグをタグデータベースに追加する """
-        data = self.client.databases.query(
-            database_id=DatabaseType.TAG.value)
-
         # すでに存在するか確認
-        for result in data["results"]:
-            title = result["properties"]["名前"]["title"][0]["text"]["content"]
-            if title == name:
-                return result["id"]
+        data = self.__query_with_title_filter(
+            database_type=DatabaseType.TAG,
+            title_filter=name)
+        if data is not None:
+            return data["id"]
 
         # 作成
         result = self.__create_page_in_database(
@@ -257,13 +253,10 @@ class NotionClient:
         )
 
     def __find_daily_log(self, date: datetime) -> Optional[dict]:
-        data = self.client.databases.query(
-            database_id=DatabaseType.DAILY_LOG.value)
-        for result in data["results"]:
-            title = result["properties"]["名前"]["title"][0]["text"]["content"]
-            if title == datetime.strftime(date, "%Y-%m-%d"):
-                return result
-        return None
+        return self.__query_with_title_filter(
+            database_type=DatabaseType.DAILY_LOG,
+            title_filter=datetime.strftime(date, "%Y-%m-%d")
+        )
 
     def __create_daily_log_page(self, date: date, weekly_log_id: str) -> dict:
         return self.__create_page_in_database(
@@ -275,14 +268,10 @@ class NotionClient:
         )
 
     def __find_weekly_log(self, year: int, isoweeknum: int) -> Optional[dict]:
-        data = self.client.databases.query(
-            database_id=DatabaseType.WEEKLY_LOG.value)
-        for result in data["results"]:
-            title = result["properties"]["名前"]["title"][0]["text"]["content"]
-            print(title, f"{year}-Week{isoweeknum}")
-            if title == f"{year}-Week{isoweeknum}":
-                return result
-        return None
+        return self.__query_with_title_filter(
+            database_type=DatabaseType.WEEKLY_LOG,
+            title_filter=f"{year}-Week{isoweeknum}"
+        )
 
     def __create_weekly_log_page(self, year: int, isoweeknum: int) -> dict:
         title_text = f"{year}-Week{isoweeknum}"
@@ -298,6 +287,19 @@ class NotionClient:
                     name="名前", text=title_text),
                 Date.from_range(name="日付", start=start_date, end=end_date),
             ]
+        )
+
+    def __query_with_status_filter(self, database_type: DatabaseType, status: list[str]) -> list[dict]:
+        data = self.__query(database_type=database_type)
+        for page in data["results"]:
+            title = Title.from_properties(page["properties"])
+            if title.text == title_filter:
+                return page
+        return None
+
+    def __query(self, database_type: DatabaseType) -> dict:
+        return self.client.databases.query(
+            database_id=database_type.value
         )
 
     def __find_recipe(self, page_id: str) -> Recipe:
@@ -443,8 +445,6 @@ if __name__ == "__main__":
     #     block_id="f2c43e16b09745b19ca599fafd429429"))
     # print(notion_client.client.pages.retrieve(
     #     page_id="f2c43e16b09745b19ca599fafd429429"))
-    # data = notion_client.client.databases.query(
-    #     database_id=DatabaseType.TAG.value)
     # すでに存在するか確認
 
     notion_client.set_today_to_inprogress()
