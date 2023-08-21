@@ -2,7 +2,7 @@ import os
 from notion_client import Client
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
-from app.domain.notion.properties import Date, Title, Relation, Properties
+from app.domain.notion.properties import Date, Title, Relation, Properties, Status
 from app.domain.notion.database.database_type import DatabaseType
 from app.domain.notion.block import BlockFactory, Block, Paragraph
 from app.domain.notion.block.rich_text import RichText, RichTextBuilder
@@ -335,6 +335,25 @@ class NotionClient:
                 daily_log = self.__create_daily_log_page(
                     date=date, weekly_log_id=weekly_log_entity["id"])
 
+    def set_today_to_inprogress(self) -> None:
+        """
+        「プロジェクト」データベースの"Today"ステータスを"In progress"にする。
+        明日の計画を練るときのための準備として利用される。
+        """
+        data = self.client.databases.query(
+            database_id=DatabaseType.PROJECT.value)
+        for result in data["results"]:
+            status = Status.of("ステータス", result["properties"]["ステータス"])
+            if status.is_today():
+                updated_status = Status.from_status_name(
+                    name="ステータス", status_name="In progress")
+                properties = Properties(
+                    [updated_status])
+                self.client.pages.update(
+                    page_id=result["id"],
+                    properties=properties.__dict__()
+                )
+
     def __find_daily_log(self, date: datetime) -> Optional[dict]:
         data = self.client.databases.query(
             database_id=DatabaseType.DAILY_LOG.value)
@@ -526,7 +545,7 @@ def create_mention_bulleted_list_item(page_id: str) -> dict:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    notion_client.create_weekly_log(year=2023, isoweeknum=34)
+    # notion_client.create_weekly_log(year=2023, isoweeknum=34)
     # print(daily_log)
     # print(notion_client.client.blocks.children.list(
     #     block_id="f2c43e16b09745b19ca599fafd429429"))
@@ -535,3 +554,5 @@ if __name__ == "__main__":
     # data = notion_client.client.databases.query(
     #     database_id=DatabaseType.TAG.value)
     # すでに存在するか確認
+
+    notion_client.set_today_to_inprogress()
