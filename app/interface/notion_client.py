@@ -302,48 +302,51 @@ class NotionClient:
             database_id=database_type.value
         )
 
+    def __retrieve_page(self, page_id: str) -> dict:
+        return self.client.pages.retrieve(page_id=page_id)
+
     def __find_recipe(self, page_id: str) -> Recipe:
-        result = self.client.pages.retrieve(page_id=page_id)
+        result = self.__retrieve_page(page_id=page_id)
         blocks = self.__get_block_children(page_id)
         return Recipe.of(result, blocks)
 
     def __find_webclip(self, page_id: str) -> Webclip:
-        result = self.client.pages.retrieve(page_id=page_id)
+        result = self.__retrieve_page(page_id=page_id)
         blocks = self.__get_block_children(page_id)
         return Webclip.of(result, blocks)
 
     def __find_book(self, page_id: str) -> Book:
-        result = self.client.pages.retrieve(page_id=page_id)
+        result = self.__retrieve_page(page_id=page_id)
         blocks = self.__get_block_children(page_id)
         return Book.of(result, blocks)
 
     def __find_prowrestling_watch(self, page_id: str) -> ProwrestlingWatch:
-        result = self.client.pages.retrieve(page_id=page_id)
+        result = self.__retrieve_page(page_id=page_id)
         blocks = self.__get_block_children(page_id)
         return ProwrestlingWatch.of(result, blocks)
 
     def __find_music(self, page_id: str) -> Music:
-        result = self.client.pages.retrieve(page_id=page_id)
+        result = self.__retrieve_page(page_id=page_id)
         blocks = self.__get_block_children(page_id)
         return Music.of(result, blocks)
 
     def __find_zettlekasten(self, page_id: str) -> Zettlekasten:
-        result = self.client.pages.retrieve(page_id=page_id)
+        result = self.__retrieve_page(page_id=page_id)
         blocks = self.__get_block_children(page_id)
         return Zettlekasten.of(result, blocks)
 
     def __find_restaurant(self, page_id: str) -> Restaurant:
-        result = self.client.pages.retrieve(page_id=page_id)
+        result = self.__retrieve_page(page_id=page_id)
         blocks = self.__get_block_children(page_id)
         return Restaurant.of(result, blocks)
 
     def __find_go_out(self, page_id: str) -> GoOut:
-        result = self.client.pages.retrieve(page_id=page_id)
+        result = self.__retrieve_page(page_id=page_id)
         blocks = self.__get_block_children(page_id)
         return GoOut.of(result, blocks)
 
     def __find_arata(self, page_id: str) -> Arata:
-        result = self.client.pages.retrieve(page_id=page_id)
+        result = self.__retrieve_page(page_id=page_id)
         blocks = self.__get_block_children(page_id)
         return Arata.of(result, blocks)
 
