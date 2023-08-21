@@ -2,7 +2,7 @@ import os
 from notion_client import Client
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
-from app.domain.notion.properties import Date, Title, Relation, Properties, Status
+from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property
 from app.domain.notion.database.database_type import DatabaseType
 from app.domain.notion.block import BlockFactory, Block, Paragraph
 from app.domain.notion.block.rich_text import RichText, RichTextBuilder
@@ -347,12 +347,15 @@ class NotionClient:
             if status.is_today():
                 updated_status = Status.from_status_name(
                     name="ステータス", status_name="In progress")
-                properties = Properties(
-                    [updated_status])
-                self.client.pages.update(
-                    page_id=result["id"],
-                    properties=properties.__dict__()
-                )
+                self.__update_page(page_id=result["id"],
+                                   properties=[updated_status])
+
+    def __update_page(self, page_id: str, properties: list[Property]) -> None:
+        """ 指定されたページを更新する """
+        self.client.pages.update(
+            page_id=page_id,
+            properties=Properties(values=properties).__dict__()
+        )
 
     def __find_daily_log(self, date: datetime) -> Optional[dict]:
         data = self.client.databases.query(
