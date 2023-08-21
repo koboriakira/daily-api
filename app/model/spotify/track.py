@@ -10,7 +10,10 @@ class RecentlyPlayedTrack(BaseModel):
     played_at: str = Field(description="When the track was played")
 
     def __hash__(self):
-        return hash((self.id, self.spotify_url))
+        return hash(self.id)
+
+    def __eq__(self, __value: 'RecentlyPlayedTrack') -> bool:
+        return self.id == __value.id
 
 
 class RecentlyPlayedTrackConverter:
