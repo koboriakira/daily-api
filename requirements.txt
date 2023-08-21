@@ -3,3 +3,4 @@ uvicorn==0.22.0
 spotipy
 notion_client
 pytest
+requests
