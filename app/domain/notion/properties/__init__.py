@@ -5,3 +5,4 @@ from .title import Title
 from .url import Url
 from .relation import Relation
 from .status import Status
+from .text import Text

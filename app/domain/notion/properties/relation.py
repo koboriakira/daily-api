@@ -22,6 +22,10 @@ class Relation(Property):
             id_list=id_list,
         )
 
+    @classmethod
+    def from_id(cls, name: str, id: str) -> "Relation":
+        return cls.from_id_list(name=name, id_list=[id])
+
     def __dict__(self):
         result = {
             "type": self.type,

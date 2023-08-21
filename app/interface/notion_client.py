@@ -2,7 +2,8 @@ import os
 from notion_client import Client
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
-from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property
+from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url
+from app.domain.notion.cover import Cover
 from app.domain.notion.database.database_type import DatabaseType
 from app.domain.notion.block import BlockFactory, Block, Paragraph
 from app.domain.notion.block.rich_text import RichText, RichTextBuilder
@@ -124,59 +125,23 @@ class NotionClient:
         for artist in track.artists:
             page_id = self.add_tag(name=artist["name"])
             tag_page_ids.append(page_id)
-        tag_page_ids = list(map(lambda t: {"id": t}, list(set(tag_page_ids))))
 
         # 新しいページを作成
-        result = self.client.pages.create(
-            parent={"type": "database_id",
-                    "database_id": DatabaseType.MUSIC.value},
-            cover={
-                "type": "external",
-                "external": {
-                        "url": track.album["images"][0]["url"]
-                }
-            },
-            properties={
-                "名前": {
-                    "title": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": track.name
-                            }
-                        }
-                    ]
-                },
-                "Artist": {
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": ",".join(list(map(lambda a: a["name"], track.artists)))
-                            }
-                        }
-                    ]
-                },
-                "タグ": {
-                    "type": "relation",
-                    "relation": tag_page_ids,
-                    "has_more": False
-                },
-                "デイリーログ": {
-                    "type": "relation",
-                    "relation": [
-                        {
-                            "id": daily_log_id
-                        }
-                    ],
-                    "has_more": False
-                },
-                "Spotify": {
-                    "type": "url",
-                    "url": track.external_urls["spotify"]
-                },
-            }
+        artist_name = ",".join(list(map(lambda a: a["name"], track.artists)))
+        spotify_url = track.external_urls["spotify"]
+        result = self.__create_page_in_database(
+            database_type=DatabaseType.MUSIC,
+            cover=Cover.from_external_url(track.album["images"][0]["url"]),
+            properties=[
+                Title.from_plain_text(name="名前", text=track.name),
+                Text.from_plain_text(name="Artist", text=artist_name),
+                Relation.from_id_list(name="タグ", id_list=tag_page_ids),
+                Relation.from_id(name="デイリーログ", id=daily_log_id),
+                Url.from_url(name="Spotify", url=spotify_url)
+            ]
         )
+
+        # URLを返す
         return result["url"]
 
     def add_album(self, album: Album, daily_log_id: str) -> str:
@@ -197,59 +162,23 @@ class NotionClient:
         for genre in album.genres:
             page_id = self.add_tag(name=genre["name"])
             tag_page_ids.append(page_id)
-        tag_page_ids = list(map(lambda t: {"id": t}, list(set(tag_page_ids))))
 
         # 新しいページを作成
-        result = self.client.pages.create(
-            parent={"type": "database_id",
-                    "database_id": DatabaseType.MUSIC.value},
-            cover={
-                "type": "external",
-                "external": {
-                        "url": album.images[0]["url"]
-                }
-            },
-            properties={
-                "名前": {
-                    "title": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": album.name
-                            }
-                        }
-                    ]
-                },
-                "Artist": {
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": ",".join(list(map(lambda a: a["name"], album.artists)))
-                            }
-                        }
-                    ]
-                },
-                "タグ": {
-                    "type": "relation",
-                    "relation": tag_page_ids,
-                    "has_more": False
-                },
-                "デイリーログ": {
-                    "type": "relation",
-                    "relation": [
-                        {
-                            "id": daily_log_id
-                        }
-                    ],
-                    "has_more": False
-                },
-                "Spotify": {
-                    "type": "url",
-                    "url": album.external_urls["spotify"]
-                },
-            }
+        artist_name = ",".join(list(map(lambda a: a["name"], album.artists)))
+        result = self.__create_page_in_database(
+            database_type=DatabaseType.MUSIC,
+            cover=Cover.from_external_url(album.images[0]["url"]),
+            properties=[
+                Title.from_plain_text(name="名前", text=album.name),
+                Text.from_plain_text(name="Artist", text=artist_name),
+                Relation.from_id_list(name="タグ", id_list=tag_page_ids),
+                Relation.from_id(name="デイリーログ", id=daily_log_id),
+                Url.from_url(name="Spotify",
+                             url=album.external_urls["spotify"])
+            ]
         )
+
+        # URLを返す
         return result["url"]
 
     def add_tag(self, name: str) -> str:
@@ -318,14 +247,16 @@ class NotionClient:
                 self.__update_page(page_id=result["id"],
                                    properties=[updated_status])
 
-    def __create_page_in_database(self, database_type: DatabaseType, properties: list[Property] = []) -> dict:
+    def __create_page_in_database(self, database_type: DatabaseType, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """
         return self.client.pages.create(
             parent={
                 "type": "database_id",
                 "database_id": database_type.value
             },
-            properties=Properties(values=properties).__dict__()
+            cover=cover.__dict__() if cover is not None else None,
+            properties=Properties(values=properties).__dict__() if len(
+                properties) > 0 else None
         )
 
     def __update_page(self, page_id: str, properties: list[Property] = []) -> None:
