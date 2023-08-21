@@ -17,10 +17,6 @@ class NotionClient:
     def __init__(self):
         self.client = Client(auth=os.getenv("NOTION_API_TOKEN"))
 
-    def _search(self, query: str) -> list:
-        response = self.client.search(query=query)
-        return response["results"]
-
     def get_daily_log(self, date: Optional[datetime] = None) -> DailyLog:
         date = datetime.now() if date is None else date
         daily_log = self.__find_daily_log(date)
@@ -101,14 +97,12 @@ class NotionClient:
 
     def add_daily_log(self, block: Block, date: Optional[datetime] = None) -> None:
         """ 指定されたテキストをデイリーログの末尾に追記する """
-        date = datetime.now() if date is None else date
-        daily_log = self.__find_daily_log(date)
-        child_element = block.to_dict()
-        print(child_element)
-        self.client.blocks.children.append(
-            block_id=daily_log["id"],
-            children=[child_element]
-        )
+        daily_log = self.__find_daily_log(
+            date=datetime.now() if date is None else date)
+        if daily_log is None:
+            print("Daily Log is not found")
+            return
+        self.__append_blocks(daily_log["id"], block)
 
     def add_track(self, track: Track, daily_log_id: str) -> str:
         """ 指定されたトラックを音楽データベースに追加する """
@@ -358,6 +352,21 @@ class NotionClient:
         block_entities = self.client.blocks.children.list(block_id=page_id)[
             "results"]
         return list(map(lambda b: BlockFactory.create(b), block_entities))
+
+    def __append_blocks(self, block_id: str, block: Block | list[Block]) -> None:
+        if isinstance(block, Block):
+            self.client.blocks.children.append(
+                block_id=block_id,
+                children=[block.to_dict()]
+            )
+            return
+        if isinstance(block, list):
+            self.client.blocks.children.append(
+                block_id=block_id,
+                children=list(map(lambda b: b.to_dict(), block))
+            )
+            return
+        raise ValueError("block must be Block or list[Block]")
 
     def add_24hours_pages_in_daily_log(self, date: str) -> None:
         """ 直近24時間以内に更新されたページを、当日のデイリーログに追加する"""
