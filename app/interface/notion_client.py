@@ -185,29 +185,19 @@ class NotionClient:
         """ 指定されたタグをタグデータベースに追加する """
         data = self.client.databases.query(
             database_id=DatabaseType.TAG.value)
+
         # すでに存在するか確認
         for result in data["results"]:
             title = result["properties"]["名前"]["title"][0]["text"]["content"]
             if title == name:
                 return result["id"]
+
         # 作成
-        result = self.client.pages.create(
-            parent={
-                "type": "database_id",
-                "database_id": DatabaseType.TAG.value
-            },
-            properties={
-                "名前": {
-                    "title": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": name
-                            }
-                        }
-                    ]
-                }
-            }
+        result = self.__create_page_in_database(
+            database_type=DatabaseType.TAG,
+            properties=[
+                Title.from_plain_text(name="名前", text=name)
+            ]
         )
         return result["id"]
 
