@@ -10,6 +10,7 @@ from app.domain.notion.block.rich_text import RichText, RichTextBuilder
 from app.domain.notion.database import DatabaseType
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
 from datetime import datetime, timedelta, timezone, date
+from datetime import date as DateObject
 from typing import Optional
 
 
@@ -17,9 +18,10 @@ class NotionClient:
     def __init__(self):
         self.client = Client(auth=os.getenv("NOTION_API_TOKEN"))
 
-    def get_daily_log(self, date: Optional[datetime] = None) -> DailyLog:
-        date = datetime.now() if date is None else date
-        daily_log = self.__find_daily_log(date)
+    def get_daily_log(self, date: Optional[DateObject] = None) -> DailyLog:
+        target_date = DateObject.today() if date is None else date
+        daily_log = self.__find_daily_log(target_date)
+        print(daily_log)
         if daily_log is None:
             raise Exception("Not found")
         properties = daily_log["properties"]
@@ -109,7 +111,7 @@ class NotionClient:
         # すでに存在するか確認
         data = self.__query_with_title_filter(
             database_type=DatabaseType.MUSIC,
-            title_filter=track.name)
+            title=track.name)
         if data is not None:
             return data["url"]
 
@@ -142,7 +144,7 @@ class NotionClient:
         # すでに存在するか確認
         data = self.__query_with_title_filter(
             database_type=DatabaseType.MUSIC,
-            title_filter=album.name)
+            title=album.name)
         if data is not None:
             return result["url"]
 
@@ -178,7 +180,7 @@ class NotionClient:
         # すでに存在するか確認
         data = self.__query_with_title_filter(
             database_type=DatabaseType.TAG,
-            title_filter=name)
+            title=name)
         if data is not None:
             return data["id"]
 
@@ -246,10 +248,10 @@ class NotionClient:
             properties=Properties(values=properties).__dict__()
         )
 
-    def __find_daily_log(self, date: datetime) -> Optional[dict]:
+    def __find_daily_log(self, date: DateObject) -> Optional[dict]:
         return self.__query_with_title_filter(
             database_type=DatabaseType.DAILY_LOG,
-            title_filter=datetime.strftime(date, "%Y-%m-%d")
+            title=date.isoformat()
         )
 
     def __create_daily_log_page(self, date: date, weekly_log_id: str) -> dict:
@@ -264,7 +266,7 @@ class NotionClient:
     def __find_weekly_log(self, year: int, isoweeknum: int) -> Optional[dict]:
         return self.__query_with_title_filter(
             database_type=DatabaseType.WEEKLY_LOG,
-            title_filter=f"{year}-Week{isoweeknum}"
+            title=f"{year}-Week{isoweeknum}"
         )
 
     def __create_weekly_log_page(self, year: int, isoweeknum: int) -> dict:
@@ -283,11 +285,11 @@ class NotionClient:
             ]
         )
 
-    def __query_with_status_filter(self, database_type: DatabaseType, status: list[str]) -> list[dict]:
+    def __query_with_title_filter(self, database_type: DatabaseType, title: str) -> list[dict]:
         data = self.__query(database_type=database_type)
         for page in data["results"]:
-            title = Title.from_properties(page["properties"])
-            if title.text == title_filter:
+            title_field = Title.from_properties(page["properties"])
+            if title_field.text == title:
                 return page
         return None
 
@@ -455,3 +457,4 @@ if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
     # notion_client.set_today_to_inprogress()
+    notion_client.get_daily_log()
