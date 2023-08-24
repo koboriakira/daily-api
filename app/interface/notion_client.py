@@ -97,6 +97,22 @@ class NotionClient:
             aratas=aratas
         )
 
+    def append_blocks(self, block_id: str, block: Block | list[Block]) -> None:
+        """ 指定されたブロックを末尾に追加する """
+        if isinstance(block, Block):
+            self.__append_block_children(
+                block_id=block_id,
+                children=[block.to_dict()]
+            )
+            return
+        if isinstance(block, list):
+            self.__append_block_children(
+                block_id=block_id,
+                children=list(map(lambda b: b.to_dict(), block))
+            )
+            return
+        raise ValueError("block must be Block or list[Block]")
+
     def add_daily_log(self, block: Block, date: Optional[datetime] = None) -> None:
         """ 指定されたテキストをデイリーログの末尾に追記する """
         daily_log = self.__find_daily_log(
@@ -104,7 +120,7 @@ class NotionClient:
         if daily_log is None:
             print("Daily Log is not found")
             return
-        self.__append_blocks(daily_log["id"], block)
+        self.append_blocks(daily_log["id"], block)
 
     def add_track(self, track: Track, daily_log_id: str) -> str:
         """ 指定されたトラックを音楽データベースに追加する """
@@ -355,23 +371,12 @@ class NotionClient:
             "results"]
         return list(map(lambda b: BlockFactory.create(b), block_entities))
 
+    def __append_block_children(self, block_id: str, children=list[dict]) -> list:
+        self.client.blocks.children.append(
+            block_id=block_id, children=children)
+
     def __list_blocks(self, block_id: str) -> dict:
         return self.client.blocks.children.list(block_id=block_id)
-
-    def __append_blocks(self, block_id: str, block: Block | list[Block]) -> None:
-        if isinstance(block, Block):
-            self.client.blocks.children.append(
-                block_id=block_id,
-                children=[block.to_dict()]
-            )
-            return
-        if isinstance(block, list):
-            self.client.blocks.children.append(
-                block_id=block_id,
-                children=list(map(lambda b: b.to_dict(), block))
-            )
-            return
-        raise ValueError("block must be Block or list[Block]")
 
     def add_24hours_pages_in_daily_log(self, date: str) -> None:
         """ 直近24時間以内に更新されたページを、当日のデイリーログに追加する"""
@@ -388,7 +393,7 @@ class NotionClient:
         # デイリーログをに追加
         mention_bulleted_list_items = list(
             map(lambda page_id: create_mention_bulleted_list_item(page_id=page_id), page_id_list))
-        self.client.blocks.children.append(
+        self.__append_block_children(
             block_id=daily_log.id,
             children=mention_bulleted_list_items
         )
