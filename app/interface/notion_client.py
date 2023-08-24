@@ -129,7 +129,7 @@ class NotionClient:
             database_type=DatabaseType.MUSIC,
             title=track.name)
         if data is not None:
-            return data["url"]
+            return data
 
         # タグを作成
         tag_page_ids = []
@@ -153,16 +153,16 @@ class NotionClient:
         )
 
         # URLを返す
-        return result["url"]
+        return result
 
-    def add_album(self, album: Album, daily_log_id: str) -> str:
+    def add_album(self, album: Album, daily_log_id: str) -> dict:
         """ 指定されたアルバムを音楽データベースに追加する """
         # すでに存在するか確認
         data = self.__query_with_title_filter(
             database_type=DatabaseType.MUSIC,
             title=album.name)
         if data is not None:
-            return result["url"]
+            return data
 
         # タグを作成
         tag_page_ids = []
@@ -189,7 +189,7 @@ class NotionClient:
         )
 
         # URLを返す
-        return result["url"]
+        return result
 
     def add_tag(self, name: str) -> str:
         """ 指定されたタグをタグデータベースに追加する """
