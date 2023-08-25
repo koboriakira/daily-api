@@ -113,10 +113,10 @@ class NotionClient:
             return
         raise ValueError("block must be Block or list[Block]")
 
-    def add_daily_log(self, block: Block, date: Optional[datetime] = None) -> None:
+    def add_daily_log(self, block: Block, date: Optional[DateObject] = None) -> None:
         """ 指定されたテキストをデイリーログの末尾に追記する """
         daily_log = self.__find_daily_log(
-            date=datetime.now() if date is None else date)
+            date=DateObject.today() if date is None else date)
         if daily_log is None:
             print("Daily Log is not found")
             return
