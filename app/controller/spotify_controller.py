@@ -1,5 +1,5 @@
-from app.model.spotify.track import RecentlyPlayedTrackConverter
-from app.model.spotify.track import RecentlyPlayedTrack as TrackEntity
+from app.model.spotify.track import RecentlyPlayedTrackConverter, TrackConverter
+from app.model.spotify.track import RecentlyPlayedTrack
 from app.domain.spotify.item import Items
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
@@ -15,7 +15,7 @@ class SpotifyController:
 
     CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
     CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
-    SCOPE = 'user-library-read'
+    SCOPE = 'user-library-read,user-top-read'
 
     def __init__(self, sp: spotipy.Spotify):
         self.sp = sp
@@ -31,7 +31,7 @@ class SpotifyController:
         sp = spotipy.Spotify(auth=access_token)
         return cls(sp)
 
-    def current_user_recently_played(self) -> list[TrackEntity]:
+    def current_user_recently_played(self) -> list[RecentlyPlayedTrack]:
         token_info = self.__read_access_token_info()
         sp = spotipy.Spotify(auth=token_info['access_token'])
         recently_played = sp.current_user_recently_played()
@@ -110,6 +110,20 @@ class SpotifyController:
         else:
             return f"http://{GlobalIpAddress.get()}/{path}"
 
-
-if __name__ == "__main__":
-    SpotifyController.get_recently_played_url()
+    def recommend(self, track_id: str):
+        token_info = self.__read_access_token_info()
+        sp = spotipy.Spotify(auth=token_info['access_token'])
+        recommendations = sp.recommendations(seed_tracks=[track_id])
+        tracks = recommendations["tracks"]
+        for track in tracks:
+            # まだ保存していない曲を返すルール
+            track_id = track["id"]
+            contain_result = sp.current_user_saved_tracks_contains(tracks=[
+                                                                   track_id])
+            is_contain = contain_result[0]
+            if not is_contain:
+                track_model = Track.from_dict(track)
+                print(track_model)
+                return TrackConverter.from_track_model(track_model)
+        # 見つからなかった場合は、とりあえず最初の曲を返す
+        return TrackConverter.from_track_model(Track.from_dict(tracks[0]))
