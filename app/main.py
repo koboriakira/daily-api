@@ -3,6 +3,7 @@ from app.router.spotify import access_token, track, current_user_recently_played
 from app.router.notion import daily_log
 from app.router.notion import block
 from app.router import line
+from app.router import gas
 from fastapi import FastAPI
 from fastapi import FastAPI, Request
 from app.controller.spotify_controller import SpotifyController
@@ -24,3 +25,5 @@ app.include_router(block.router,
                    prefix="/notion/block", tags=["notion"])
 app.include_router(line.router,
                    prefix="/line", tags=["line"])
+app.include_router(gas.router,
+                   prefix="/gas", tags=["gas"])
