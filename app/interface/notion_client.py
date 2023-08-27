@@ -297,7 +297,7 @@ class NotionClient:
             properties=[
                 Title.from_plain_text(
                     name="名前", text=title_text),
-                Date.from_range(name="日付", start=start_date, end=end_date),
+                Date.from_range(name="期間", start=start_date, end=end_date),
             ]
         )
 
@@ -462,4 +462,4 @@ if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
     # notion_client.set_today_to_inprogress()
-    notion_client.get_daily_log()
+    notion_client.create_weekly_log(year=2023, isoweeknum=35)
