@@ -37,3 +37,12 @@ async def recommend(track_id: str):
     """
     spotify_controller = SpotifyController.get_instance()
     return spotify_controller.recommend(track_id=track_id)
+
+
+@router.get("/playing", response_model=TrackEntity)
+async def get_playing():
+    """
+    現在流れている曲を取得する
+    """
+    spotify_controller = SpotifyController.get_instance()
+    return spotify_controller.get_playing()

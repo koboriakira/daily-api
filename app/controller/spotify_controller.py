@@ -15,7 +15,7 @@ class SpotifyController:
 
     CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
     CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
-    SCOPE = 'user-library-read,user-top-read'
+    SCOPE = 'user-library-read,user-top-read,user-read-currently-playing'
 
     def __init__(self, sp: spotipy.Spotify):
         self.sp = sp
@@ -127,3 +127,11 @@ class SpotifyController:
                 return TrackConverter.from_track_model(track_model)
         # 見つからなかった場合は、とりあえず最初の曲を返す
         return TrackConverter.from_track_model(Track.from_dict(tracks[0]))
+
+    def get_playing(self):
+        token_info = self.__read_access_token_info()
+        sp = spotipy.Spotify(auth=token_info['access_token'])
+        playing_track = sp.current_user_playing_track()
+        print(playing_track)
+        track = Track.from_dict(playing_track["item"])
+        return TrackConverter.from_track_model(track)
