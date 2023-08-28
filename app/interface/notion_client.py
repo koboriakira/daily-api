@@ -245,6 +245,18 @@ class NotionClient:
                 self.__update_page(page_id=result["id"],
                                    properties=[updated_status])
 
+    def create_zettlekasten(self, title: str, url: str) -> None:
+        daily_log_entity = self.__find_daily_log(DateObject.today())
+        daily_log_id = daily_log_entity["id"]
+        return self.__create_page_in_database(
+            database_type=DatabaseType.ZETTLEKASTEN,
+            properties=[
+                Title.from_plain_text(name="名前", text=title),
+                Url.from_url(name="記事", url=url),
+                Relation.from_id(name="デイリーログ", id=daily_log_id)
+            ]
+        )
+
     def __create_page_in_database(self, database_type: DatabaseType, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """
         return self.client.pages.create(
@@ -462,4 +474,5 @@ if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
     # notion_client.set_today_to_inprogress()
-    notion_client.create_weekly_log(year=2023, isoweeknum=35)
+    notion_client.create_zettlekasten(
+        title="test", url="https://www.google.com")
