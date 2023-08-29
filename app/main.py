@@ -1,6 +1,6 @@
 from app.router import healthcheck
 from app.router.spotify import access_token, track, current_user_recently_played
-from app.router.notion import daily_log, block, zettlekasten
+from app.router.notion import daily_log, block, zettlekasten, project
 from app.router import line
 from app.router import gas
 from fastapi import FastAPI
@@ -22,6 +22,8 @@ app.include_router(daily_log.router,
                    prefix="/notion/daily_log", tags=["notion"])
 app.include_router(zettlekasten.router,
                    prefix="/notion/zettlekasten", tags=["notion"])
+app.include_router(project.router,
+                   prefix="/notion/project", tags=["notion"])
 app.include_router(block.router,
                    prefix="/notion/block", tags=["notion"])
 app.include_router(line.router,

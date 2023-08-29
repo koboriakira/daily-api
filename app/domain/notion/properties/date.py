@@ -20,6 +20,8 @@ class Date(Property):
 
     @staticmethod
     def of(name: str, param: dict) -> "Date":
+        if param["date"] is None:
+            return Date(name=name, id=param["id"])
         return Date(
             name=name,
             id=param["id"],

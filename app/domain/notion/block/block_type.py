@@ -7,6 +7,7 @@ class BlockType(Enum):
     PARAGRAPH = "paragraph"
     HEADING_1 = "heading_1"
     TABLE = "table"
+    CHILD_DATABASE = "child_database"
     # 以下、Copilotによる自動生成
     HEADING_2 = "heading_2"
     HEADING_3 = "heading_3"

@@ -5,7 +5,7 @@ from app.domain.spotify.album import Album
 from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url
 from app.domain.notion.cover import Cover
 from app.domain.notion.database.database_type import DatabaseType
-from app.domain.notion.block import BlockFactory, Block, Paragraph
+from app.domain.notion.block import BlockFactory, Block, Paragraph, ToDo, ChildDatabase
 from app.domain.notion.block.rich_text import RichText, RichTextBuilder
 from app.domain.notion.database import DatabaseType
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
@@ -257,6 +257,51 @@ class NotionClient:
             ]
         )
 
+    def find_projects(self,
+                      status_list: list[Status] = []) -> list[dict]:
+        """ プロジェクトデータベースの全てのページを取得する """
+        status_name_list = [
+            status.status_name for status in status_list]
+
+        # まずプロジェクトを検索する
+        searched_projects = self.__query(
+            database_type=DatabaseType.PROJECT)["results"]
+        projects = []
+        for project in searched_projects:
+            properties = project["properties"]
+            title = Title.from_properties(properties)
+            status = Status.of(name="ステータス", param=properties["ステータス"])
+            if status.status_name in status_name_list:
+                projects.append({
+                    "id": project["id"],
+                    "url": project["url"],
+                    "status": status.name,
+                    "title": title.text,
+                })
+
+        # ヒットしたプロジェクトのタスクを取得する
+        for project in projects:
+            children = self.__get_block_children(page_id=project["id"])
+            project["tasks"] = []
+            for child in children:
+                if isinstance(child, ChildDatabase):
+                    database_id = child.id
+                    response = self.__query(database_type=database_id)
+                    for task in response["results"]:
+                        task_title = Title.from_properties(task["properties"])
+                        task_status = Status.of(
+                            name="ステータス", param=task["properties"]["ステータス"])
+                        task_date = Date.of(
+                            name="予定日", param=task["properties"]["予定日"])
+                        project["tasks"].append({
+                            "id": task["id"],
+                            "title": task_title.text,
+                            "status": task_status.status_name,
+                            "date": task_date.start
+                        })
+
+        return projects
+
     def __create_page_in_database(self, database_type: DatabaseType, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """
         return self.client.pages.create(
@@ -321,9 +366,11 @@ class NotionClient:
                 return page
         return None
 
-    def __query(self, database_type: DatabaseType) -> dict:
+    def __query(self, database_type: DatabaseType | str) -> dict:
+        database_id = database_type.value if isinstance(
+            database_type, DatabaseType) else database_type
         return self.client.databases.query(
-            database_id=database_type.value
+            database_id=database_id
         )
 
     def __retrieve_page(self, page_id: str) -> dict:
@@ -474,5 +521,6 @@ if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
     # notion_client.set_today_to_inprogress()
-    notion_client.create_zettlekasten(
-        title="test", url="https://www.google.com")
+    status = Status.from_status_name(
+        name="ステータス", status_name="Today")
+    print(notion_client.find_projects(status_list=[status]))

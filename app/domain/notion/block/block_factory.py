@@ -13,6 +13,8 @@ from app.domain.notion.block.bookmark import Bookmark
 from app.domain.notion.block.image import Image
 from app.domain.notion.block.code import Code
 from app.domain.notion.block.table import Table
+from app.domain.notion.block.child_database import ChildDatabase
+from app.domain.notion.block.to_do import ToDo
 from typing import Union
 
 
@@ -53,6 +55,10 @@ class BlockFactory():
                 return Table.of(block)
             case BlockType.NUMBERED_LIST_ITEM:
                 return NumberedListItem.of(block)
+            case BlockType.CHILD_DATABASE:
+                return ChildDatabase.of(block)
+            case BlockType.TO_DO:
+                return ToDo.of(block)
             case _:
                 print(block)
                 raise ValueError(
