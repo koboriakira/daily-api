@@ -31,10 +31,10 @@ class Date(Property):
         )
 
     @staticmethod
-    def from_start_date(name: str, start_date: date) -> "Date":
+    def from_start_date(name: str, start_date: Optional[date] = None) -> "Date":
         return Date(
             name=name,
-            start=start_date.isoformat(),
+            start=start_date.isoformat() if start_date is not None else None,
         )
 
     @staticmethod

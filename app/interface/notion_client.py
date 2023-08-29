@@ -258,7 +258,8 @@ class NotionClient:
         )
 
     def find_projects(self,
-                      status_list: list[Status] = []) -> list[dict]:
+                      status_list: list[Status] = [],
+                      remind_date: Optional[DateObject] = None) -> list[dict]:
         """ プロジェクトデータベースの全てのページを取得する """
         status_name_list = [
             status.status_name for status in status_list]
@@ -271,13 +272,19 @@ class NotionClient:
             properties = project["properties"]
             title = Title.from_properties(properties)
             status = Status.of(name="ステータス", param=properties["ステータス"])
-            if status.status_name in status_name_list:
-                projects.append({
-                    "id": project["id"],
-                    "url": project["url"],
-                    "status": status.name,
-                    "title": title.text,
-                })
+            if len(status_name_list) > 0 and status.status_name not in status_name_list:
+                continue
+            if remind_date is not None:
+                project_remind_date = Date.of(
+                    name="リマインド", param=properties["リマインド"])
+                if project_remind_date.start != remind_date.isoformat():
+                    continue
+            projects.append({
+                "id": project["id"],
+                "url": project["url"],
+                "status": status.name,
+                "title": title.text,
+            })
 
         # ヒットしたプロジェクトのタスクを取得する
         for project in projects:
@@ -301,6 +308,19 @@ class NotionClient:
                         })
 
         return projects
+
+    def update_project(self,
+                       project_block_id: str,
+                       status: Optional[str] = None) -> None:
+        """ 指定されたプロジェクトのステータスを更新する """
+        properties = []
+        if status is not None:
+            properties.append(Status.from_status_name(
+                name="ステータス", status_name=status))
+        self.__update_page(
+            page_id=project_block_id,
+            properties=properties
+        )
 
     def __create_page_in_database(self, database_type: DatabaseType, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """
@@ -523,4 +543,6 @@ if __name__ == "__main__":
     # notion_client.set_today_to_inprogress()
     status = Status.from_status_name(
         name="ステータス", status_name="Today")
-    print(notion_client.find_projects(status_list=[status]))
+    projects = notion_client.find_projects(remind_date=DateObject(2023, 9, 11))
+    notion_client.update_project(
+        project_block_id=projects[0]["id"], status="Today")
