@@ -128,10 +128,12 @@ class SpotifyController:
         # 見つからなかった場合は、とりあえず最初の曲を返す
         return TrackConverter.from_track_model(Track.from_dict(tracks[0]))
 
-    def get_playing(self):
+    def get_playing(self) -> Optional[Track]:
         token_info = self.__read_access_token_info()
         sp = spotipy.Spotify(auth=token_info['access_token'])
         playing_track = sp.current_user_playing_track()
+        if playing_track is None:
+            return None
         print(playing_track)
         track = Track.from_dict(playing_track["item"])
         return TrackConverter.from_track_model(track)

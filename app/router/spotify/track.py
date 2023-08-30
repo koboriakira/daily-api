@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.interface.notion_client import NotionClient
 from app.model.url import NotionUrl
 from app.model.spotify.track import Track as TrackEntity
+from typing import Optional
 router = APIRouter()
 
 
@@ -39,7 +40,7 @@ async def recommend(track_id: str):
     return spotify_controller.recommend(track_id=track_id)
 
 
-@router.get("/playing", response_model=TrackEntity)
+@router.get("/playing", response_model=Optional[TrackEntity])
 async def get_playing():
     """
     現在流れている曲を取得する
