@@ -322,6 +322,38 @@ class NotionClient:
             properties=properties
         )
 
+    def find_recipes(self, detail: bool = False) -> list[dict]:
+        # 食材マスタ
+        ingredient_list = self.__query(
+            database_type=DatabaseType.INGREDIENTS)["results"]
+        ingredients_map = {}
+        for ingredient in ingredient_list:
+            properties = ingredient["properties"]
+            title = Title.from_properties(properties)
+            ingredients_map[ingredient["id"]] = title.text
+
+        # まずレシピを検索する
+        searched_recipes = self.__query(
+            database_type=DatabaseType.RECIPE)["results"]
+        recipes = []
+        for recipe in searched_recipes:
+            properties = recipe["properties"]
+            title = Title.from_properties(properties)
+            ingredients_relation_id = self.__get_relation_ids(
+                properties=recipe["properties"], key="Ingredients")
+            ingredients = [ingredients_map[id]
+                           for id in ingredients_relation_id]
+            recipes.append({
+                "id": recipe["id"],
+                "url": recipe["url"],
+                "title": title.text,
+                "ingredients": ingredients,
+            })
+        if detail:
+            # ヒットしたレシピの招待を取得する
+            pass
+        return recipes
+
     def __create_page_in_database(self, database_type: DatabaseType, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """
         return self.client.pages.create(

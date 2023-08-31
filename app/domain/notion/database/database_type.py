@@ -16,6 +16,7 @@ class DatabaseType(Enum):
     WEEKLY_LOG = "3ae412cf-6c87-4119-a9c6-ffdb2eee2a1e"
     PROJECT = "458c69ce-4e1c-49fe-810c-f26c2291e294"
     ZETTLEKASTEN = "2dd39a65-3f14-45e1-a51e-2c3d857a8321"
+    RECIPE = "64b6d5f1-2547-41a2-a74d-25f0c4df041e"
 
     @staticmethod
     def ignore_updated_at() -> list[str]:
