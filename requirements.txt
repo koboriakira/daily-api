@@ -4,3 +4,4 @@ spotipy
 notion_client
 pytest
 requests
+slack_sdk
