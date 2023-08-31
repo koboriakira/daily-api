@@ -2,7 +2,7 @@ import os
 from notion_client import Client
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
-from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url
+from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, LastEditedTime, Select
 from app.domain.notion.cover import Cover
 from app.domain.notion.database.database_type import DatabaseType
 from app.domain.notion.block import BlockFactory, Block, Paragraph, ToDo, ChildDatabase
@@ -343,11 +343,20 @@ class NotionClient:
                 properties=recipe["properties"], key="Ingredients")
             ingredients = [ingredients_map[id]
                            for id in ingredients_relation_id]
+            meal_categories = MultiSelect.of(
+                name="種類", param=properties["種類"]) if "種類" in properties else None
+            last_edited_time = LastEditedTime.of(
+                name="最終更新日時", param=properties["最終更新日時"])
+            select = Select.of(name="状態", param=properties["状態"])
+
             recipes.append({
                 "id": recipe["id"],
                 "url": recipe["url"],
                 "title": title.text,
                 "ingredients": ingredients,
+                "meal_categories": [c.name for c in meal_categories.values] if meal_categories is not None else [],
+                "status": select.selected_name,
+                "last_edited_date": last_edited_time.value.date().isoformat() if select.selected_name != "まだつくってない" else None,
             })
         if detail:
             # ヒットしたレシピの招待を取得する
