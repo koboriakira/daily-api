@@ -5,8 +5,7 @@ from app.domain.spotify.album import Album
 from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, LastEditedTime, Select
 from app.domain.notion.cover import Cover
 from app.domain.notion.database.database_type import DatabaseType
-from app.domain.notion.block import BlockFactory, Block, Paragraph, ToDo, ChildDatabase
-from app.domain.notion.block.rich_text import RichText, RichTextBuilder
+from app.domain.notion.block import BlockFactory, Block, ChildDatabase
 from app.domain.notion.database import DatabaseType
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
 from datetime import datetime, timedelta, timezone, date
@@ -362,6 +361,33 @@ class NotionClient:
             # ヒットしたレシピの招待を取得する
             pass
         return recipes
+
+    def find_musics(self, date: Optional[DateObject]) -> list[dict]:
+        date = DateObject.today() if date is None else date
+        daily_log = self.__find_daily_log(date=date)
+        daily_log_id = daily_log["id"] if daily_log is not None else None
+
+        # まず音楽を検索する
+        searched_musics = self.__query(
+            database_type=DatabaseType.MUSIC)["results"]
+        musics = []
+        for searched_music in searched_musics:
+            properties = searched_music["properties"]
+            title = Title.from_properties(properties)
+            spotify_url = Url.of(name="Spotify", param=properties["Spotify"])
+            relation_ids = self.__get_relation_ids(
+                properties=properties, key="デイリーログ")
+            artist_text = Text.from_dict(
+                name="Artist", param=properties["Artist"])
+            if daily_log_id is not None and daily_log_id not in relation_ids:
+                continue
+            musics.append({
+                "id": searched_music["id"],
+                "artist": artist_text.text,
+                "title": title.text,
+                "spotify_url": spotify_url.url
+            })
+        return musics
 
     def __create_page_in_database(self, database_type: DatabaseType, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """

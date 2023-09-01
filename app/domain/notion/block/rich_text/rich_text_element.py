@@ -72,12 +72,23 @@ class RichTextElement(metaclass=ABCMeta):
             raise NotImplementedError("equation is not implemented yet")
         raise Exception("invalid type")
 
-    @abstractmethod
+    @staticmethod
+    def from_plain_text(text: str) -> "RichTextElement":
+        """ plain_textからRichTextElementを生成する """
+        return RichTextTextElement.of(content=text)
+
+    def to_plain_text(self) -> str:
+        """ plain_textに変換する """
+        if isinstance(self, RichTextTextElement):
+            return self.content
+        raise NotImplementedError("not implemented yet")
+
+    @ abstractmethod
     def get_type(self) -> str:
         """ text, mention, equationのどれかを返す """
         pass
 
-    @abstractmethod
+    @ abstractmethod
     def to_dict_sub(self) -> str:
         """ Text, Mention, Equationのそれぞれで実装する """
         pass
@@ -138,14 +149,14 @@ class RichTextMentionElement(RichTextElement):
         self.link_preview_url = link_preview_url
         super().__init__(annotations, plain_text, href)
 
-    @staticmethod
+    @ staticmethod
     def of_database(database_id: str) -> "RichTextMentionElement":
         return RichTextMentionElement(
             mention_type="database",
             object_id=database_id
         )
 
-    @staticmethod
+    @ staticmethod
     def of_page(page_id: str) -> "RichTextMentionElement":
         return RichTextMentionElement(
             mention_type="page",
