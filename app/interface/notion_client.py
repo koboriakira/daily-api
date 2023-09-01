@@ -282,7 +282,7 @@ class NotionClient:
             projects.append({
                 "id": project["id"],
                 "url": project["url"],
-                "status": status.name,
+                "status": status.status_name,
                 "title": title.text,
             })
 

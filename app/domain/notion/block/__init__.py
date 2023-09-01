@@ -13,3 +13,4 @@ from .code import Code
 from .child_database import ChildDatabase
 from .to_do import ToDo
 from .callout import Callout
+from .child_page import ChildPage

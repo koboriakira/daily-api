@@ -16,6 +16,7 @@ from app.domain.notion.block.table import Table
 from app.domain.notion.block.child_database import ChildDatabase
 from app.domain.notion.block.to_do import ToDo
 from app.domain.notion.block.callout import Callout
+from app.domain.notion.block.child_page import ChildPage
 from typing import Union
 
 
@@ -62,6 +63,8 @@ class BlockFactory():
                 return ToDo.of(block)
             case BlockType.CALLOUT:
                 return Callout.of(block)
+            case BlockType.CHILD_PAGE:
+                return ChildPage.of(block)
             case _:
                 print(block)
                 raise ValueError(
