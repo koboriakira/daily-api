@@ -30,7 +30,7 @@ async def get_projects(status: str):
     """ NotionのZettlekastenに新しいページを追加する """
     notion_client = NotionClient()
 
-    status_list = [Status.from_status_name(
+    status_list = [] if status == "all" else [Status.from_status_name(
         "ステータス", s) for s in status.split(",")]
     projects = notion_client.find_projects(status_list=status_list)
 
