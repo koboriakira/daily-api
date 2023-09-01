@@ -304,7 +304,7 @@ class NotionClient:
                             "id": task["id"],
                             "title": task_title.text,
                             "status": task_status.status_name,
-                            "date": task_date.start
+                            "implementation_date": task_date.start
                         })
 
         return projects
