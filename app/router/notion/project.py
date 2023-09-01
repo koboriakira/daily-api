@@ -12,8 +12,8 @@ class Task(BaseModel):
     id: str = Field(..., title="タスクのID")
     title: str = Field(..., title="タスクのタイトル")
     status: str = Field(..., title="タスクのステータス")
-    date: Optional[str] = Field(..., title="タスクの実施予定日",
-                                regex=r"^\d{4}-\d{2}-\d{2}$")
+    implementation_date: Optional[str] = Field(..., title="タスクの実施予定日",
+                                               regex=r"^\d{4}-\d{2}-\d{2}$")
 
 
 class Project(BaseModel):
