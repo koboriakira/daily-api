@@ -7,6 +7,7 @@ from typing import Optional
 @dataclass
 class Text(Property):
     rich_text: RichText
+    type: str = "rich_text"
 
     def __init__(self, name: str, rich_text: RichText, id: Optional[str] = None):
         self.name = name
@@ -28,13 +29,17 @@ class Text(Property):
             raise e
 
     def __dict__(self):
-        raise NotImplementedError()
+        result = {
+            "type": self.type,
+            "rich_text": self.rich_text.to_dict()
+        }
+        return {self.name: result}
 
-    @ staticmethod
+    @staticmethod
     def from_plain_text(name: str, text: str) -> "Text":
         return Text(
             name=name,
-            text=text,
+            rich_text=RichText.from_plain_text(text=text),
         )
 
     @property

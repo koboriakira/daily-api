@@ -581,6 +581,13 @@ class NotionClient:
                 continue
             yield page
 
+    def test(self):
+        tracks = self.__query(
+            database_type=DatabaseType.MUSIC,
+        )
+        track = tracks["results"][0]
+        print(track)
+
 
 def valid_datetime(target: datetime, from_date: datetime, to_date: datetime) -> bool:
     return from_date.timestamp() <= target.timestamp() and target.timestamp() <= to_date.timestamp()
@@ -610,8 +617,4 @@ if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
     # notion_client.set_today_to_inprogress()
-    status = Status.from_status_name(
-        name="ステータス", status_name="Today")
-    projects = notion_client.find_projects(remind_date=DateObject(2023, 9, 11))
-    notion_client.update_project(
-        project_block_id=projects[0]["id"], status="Today")
+    notion_client.test()
