@@ -283,6 +283,7 @@ class NotionClient:
                 "url": project["url"],
                 "status": status.status_name,
                 "title": title.text,
+                "updated_at": project["last_edited_time"],
             })
 
         # ヒットしたプロジェクトのタスクを取得する

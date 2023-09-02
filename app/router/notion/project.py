@@ -3,7 +3,8 @@ from fastapi import APIRouter
 from typing import Optional
 from app.interface.notion_client import NotionClient
 from app.domain.notion.properties import Status
-
+from datetime import datetime as DatetimeObject
+from datetime import timedelta
 
 router = APIRouter()
 
@@ -23,6 +24,7 @@ class Project(BaseModel):
                      regex=r"^https://www.notion.so/.*")
     status: str = Field(..., title="プロジェクトのステータス")
     tasks: list[Task] = Field(..., title="プロジェクトのタスク")
+    updated_at: DatetimeObject = Field(..., title="プロジェクトの最終更新日時")
 
 
 @router.get("/")
@@ -35,6 +37,9 @@ async def get_projects(status: str):
 
     project_model_list = []
     for project in projects:
+        project["updated_at"] = DatetimeObject\
+            .fromisoformat(project["updated_at"].replace("Z", "+00:00"))\
+            .astimezone() + timedelta(hours=9)
         task_model_list = []
         for task in project["tasks"]:
             print(task)
