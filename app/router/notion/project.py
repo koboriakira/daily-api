@@ -24,6 +24,7 @@ class Project(BaseModel):
                      regex=r"^https://www.notion.so/.*")
     status: str = Field(..., title="プロジェクトのステータス")
     tasks: list[Task] = Field(..., title="プロジェクトのタスク")
+    created_at: DatetimeObject = Field(..., title="プロジェクトの最終更新日時")
     updated_at: DatetimeObject = Field(..., title="プロジェクトの最終更新日時")
 
 
@@ -37,6 +38,9 @@ async def get_projects(status: str):
 
     project_model_list = []
     for project in projects:
+        project["created_at"] = DatetimeObject\
+            .fromisoformat(project["created_at"].replace("Z", "+00:00"))\
+            .astimezone() + timedelta(hours=9)
         project["updated_at"] = DatetimeObject\
             .fromisoformat(project["updated_at"].replace("Z", "+00:00"))\
             .astimezone() + timedelta(hours=9)
