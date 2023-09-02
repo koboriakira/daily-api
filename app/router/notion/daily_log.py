@@ -40,3 +40,20 @@ async def get_daily_log(Authorization: Optional[str] = Header(default=None)):
     AuthorizeChecker.validate(access_token=Authorization)
     notion_client = NotionClient()
     return notion_client.get_daily_log()
+
+
+class CreateWeeklyLogRequest(BaseModel):
+    year: int
+    isoweeknum: int
+
+
+@router.post("/weekly", response_model=dict)
+async def create_weekly_log(request: CreateWeeklyLogRequest):
+    """ 指定された週のウィークリーログを作成する """
+    """ ウィークリーログを作成する """
+    notion_client = NotionClient()
+    notion_client.create_weekly_log(year=request.year,
+                                    isoweeknum=request.isoweeknum)
+    return {
+        "success": True,
+    }
