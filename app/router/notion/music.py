@@ -1,40 +1,38 @@
+from app.router.notion.page_base_model import PageBaseModel
 from pydantic import BaseModel, Field
 from fastapi import APIRouter
 from typing import Optional
 from app.interface.notion_client import NotionClient
 from datetime import date as DateObject
+from datetime import datetime as DatetimeObject
+from app.model import NotionUrl
 
 
 router = APIRouter()
 
 
-class Task(BaseModel):
-    id: str = Field(..., title="タスクのID")
-    title: str = Field(..., title="タスクのタイトル")
-    status: str = Field(..., title="タスクのステータス")
-    date: Optional[str] = Field(..., title="タスクの実施予定日",
-                                regex=r"^\d{4}-\d{2}-\d{2}$")
+class Music(PageBaseModel):
+    artist: str = Field(..., title="アーティスト")
+    title: str = Field(..., title="タイトル")
+    spotify_url: str = Field(..., title="SpotifyのURL",
+                             regex=r"^https://open.spotify.com/.*")
 
 
-class Project(BaseModel):
-    id: str = Field(..., title="プロジェクトのID")
-    title: str = Field(..., title="プロジェクトのタイトル")
-    url: str = Field(..., title="プロジェクトのURL",
-                     regex=r"^https://www.notion.so/.*")
-    status: str = Field(..., title="プロジェクトのステータス")
-    tasks: list[Task] = Field(..., title="プロジェクトのタスク")
-
-
-@router.get("/registerd")
-async def get_registerd(date: Optional[DateObject] = None, embed_url: bool = False):
+@ router.get("/registered/{date}")
+async def get_registerd(date: DateObject):
     """ 登録した音楽を取得 """
-    notion_client = NotionClient()
+    music_entities = NotionClient().retrieve_musics()
+    music_entities = list(
+        filter(lambda music: music["created_at"].date() == date, music_entities))
+    return convert_to_model(music_entities)
 
-    musics = notion_client.find_musics(date=date)
 
-    if embed_url:
-        for music in musics:
-            track_id = music["spotify_url"].split("/")[-1]
-            music["embed_url"] = f"""<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/{track_id}?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>"""
+@ router.get("/")
+async def get_music():
+    """ 音楽を取得 """
+    music_entities = NotionClient().retrieve_musics()
+    return convert_to_model(music_entities)
 
-    return musics
+
+def convert_to_model(music_entites: list[dict]) -> list[Music]:
+    return [Music(**music_entity) for music_entity in music_entites]

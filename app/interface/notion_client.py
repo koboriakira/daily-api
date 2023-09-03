@@ -2,8 +2,8 @@ import os
 from notion_client import Client
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
-from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, LastEditedTime, Select
-from app.domain.notion.cover import Cover
+from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, Select
+from app.domain.notion import Cover, NotionDatetime, TimeKind
 from app.domain.notion.database.database_type import DatabaseType
 from app.domain.notion.block import BlockFactory, Block, ChildDatabase
 from app.domain.notion.database import DatabaseType
@@ -346,8 +346,8 @@ class NotionClient:
                            for id in ingredients_relation_id]
             meal_categories = MultiSelect.of(
                 name="種類", param=properties["種類"]) if "種類" in properties else None
-            last_edited_time = LastEditedTime.of(
-                name="最終更新日時", param=properties["最終更新日時"])
+            last_edited_time = NotionDatetime.from_page_block(
+                kind=TimeKind.LAST_EDITED_TIME, block=recipe)
             select = Select.of(name="状態", param=properties["状態"])
 
             recipes.append({
@@ -364,12 +364,7 @@ class NotionClient:
             pass
         return recipes
 
-    def find_musics(self, date: Optional[DateObject]) -> list[dict]:
-        date = DateObject.today() if date is None else date
-        daily_log = self.__find_daily_log(date=date)
-        daily_log_id = daily_log["id"] if daily_log is not None else None
-
-        # まず音楽を検索する
+    def retrieve_musics(self) -> list[dict]:
         searched_musics = self.__query(
             database_type=DatabaseType.MUSIC)["results"]
         musics = []
@@ -377,17 +372,23 @@ class NotionClient:
             properties = searched_music["properties"]
             title = Title.from_properties(properties)
             spotify_url = Url.of(name="Spotify", param=properties["Spotify"])
-            relation_ids = self.__get_relation_ids(
-                properties=properties, key="デイリーログ")
             artist_text = Text.from_dict(
                 name="Artist", param=properties["Artist"])
-            if daily_log_id is not None and daily_log_id not in relation_ids:
-                continue
+            last_edited_time = NotionDatetime.from_page_block(
+                kind=TimeKind.LAST_EDITED_TIME, block=searched_music)
+            created_time = NotionDatetime.from_page_block(
+                kind=TimeKind.CREATED_TIME, block=searched_music)
+            daily_log_id = self.__get_relation_ids(
+                properties=properties, key="デイリーログ")
             musics.append({
                 "id": searched_music["id"],
+                "url": searched_music["url"],
                 "artist": artist_text.text,
                 "title": title.text,
-                "spotify_url": spotify_url.url
+                "spotify_url": spotify_url.url,
+                "created_at": created_time.value,
+                "updated_at": last_edited_time.value,
+                "daily_log_id": daily_log_id
             })
         return musics
 

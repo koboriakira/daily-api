@@ -7,5 +7,4 @@ from .relation import Relation
 from .status import Status
 from .text import Text
 from .multi_select import MultiSelect
-from .last_edited_time import LastEditedTime
 from .select import Select
