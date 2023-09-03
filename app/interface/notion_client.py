@@ -440,6 +440,29 @@ class NotionClient:
             })
         return entities
 
+    def retrieve_zettlekastens(self) -> list[dict]:
+        searched_zettlekastens = self.__query(
+            database_type=DatabaseType.ZETTLEKASTEN)["results"]
+        entities = []
+        for page in searched_zettlekastens:
+            properties = page["properties"]
+            title = Title.from_properties(properties)
+            last_edited_time = NotionDatetime.from_page_block(
+                kind=TimeKind.LAST_EDITED_TIME, block=page)
+            created_time = NotionDatetime.from_page_block(
+                kind=TimeKind.CREATED_TIME, block=page)
+            daily_log_id = self.__get_relation_ids(
+                properties=properties, key="デイリーログ")
+            entities.append({
+                "id": page["id"],
+                "url": page["url"],
+                "title": title.text,
+                "created_at": created_time.value,
+                "updated_at": last_edited_time.value,
+                "daily_log_id": daily_log_id,
+            })
+        return entities
+
     def __create_page_in_database(self, database_type: DatabaseType, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """
         return self.client.pages.create(

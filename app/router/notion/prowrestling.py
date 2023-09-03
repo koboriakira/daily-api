@@ -14,7 +14,7 @@ router = APIRouter()
 #     tags: list[Tags] = Field(..., title="タグのリスト")
 
 
-@ router.get("/")
+@ router.get("/", response_model=list[PageBaseModel])
 async def get_prowrestling():
     """ 音楽を取得 """
     entities = NotionClient().retrieve_prowrestlings()

@@ -14,7 +14,7 @@ class Book(PageBaseModel):
     status: Optional[str] = Field(default=None, title="ステータス")
 
 
-@ router.get("/")
+@ router.get("/", response_model=list[Book])
 async def get_books():
     """ 音楽を取得 """
     entities = NotionClient().retrieve_books()

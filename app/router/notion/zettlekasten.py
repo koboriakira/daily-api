@@ -6,7 +6,8 @@ from app.interface.notion_client import NotionClient
 from app.util.authorize_checker import AuthorizeChecker
 from app.domain.notion.block.rich_text import RichTextBuilder
 from app.domain.notion.block import Paragraph
-from app.model.url import NotionUrl
+from app.model import NotionUrl
+from app.router.notion.page_base_model import PageBaseModel
 
 router = APIRouter()
 
@@ -26,3 +27,18 @@ async def create_zettlekasten(request: ZettlekastenRequest):
         request.title,
         url=request.url)
     return NotionUrl(url=page["url"], block_id=page["id"])
+
+
+@router.get("/", response_model=list[PageBaseModel])
+async def get_zettlekastens():
+    """ Zettlekastenのページを取得する """
+    notion_client = NotionClient()
+
+    # テキスト
+    entities = notion_client.retrieve_zettlekastens()
+    print(entities)
+    return convert_to_model(entities)
+
+
+def convert_to_model(entites: list[dict]) -> list[PageBaseModel]:
+    return [PageBaseModel(**entity) for entity in entites]

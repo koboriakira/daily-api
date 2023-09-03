@@ -26,7 +26,7 @@ async def get_registerd(date: DateObject):
     return convert_to_model(entities)
 
 
-@ router.get("/")
+@ router.get("/", response_model=list[Music])
 async def get_music():
     """ 音楽を取得 """
     music_entities = NotionClient().retrieve_musics()
