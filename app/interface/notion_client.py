@@ -323,7 +323,7 @@ class NotionClient:
             properties=properties
         )
 
-    def find_recipes(self, detail: bool = False) -> list[dict]:
+    def retrieve_recipes(self, detail: bool = False) -> list[dict]:
         # 食材マスタ
         ingredient_list = self.__query(
             database_type=DatabaseType.INGREDIENTS)["results"]
@@ -348,16 +348,22 @@ class NotionClient:
                 name="種類", param=properties["種類"]) if "種類" in properties else None
             last_edited_time = NotionDatetime.from_page_block(
                 kind=TimeKind.LAST_EDITED_TIME, block=recipe)
+            created_time = NotionDatetime.from_page_block(
+                kind=TimeKind.CREATED_TIME, block=recipe)
+            daily_log_id = self.__get_relation_ids(
+                properties=properties, key="デイリーログ")
             select = Select.of(name="状態", param=properties["状態"])
 
             recipes.append({
                 "id": recipe["id"],
                 "url": recipe["url"],
                 "title": title.text,
+                "updated_at": last_edited_time.value,
+                "created_at": created_time.value,
+                "daily_log_id": daily_log_id,
                 "ingredients": ingredients,
                 "meal_categories": [c.name for c in meal_categories.values] if meal_categories is not None else [],
                 "status": select.selected_name,
-                "last_edited_date": last_edited_time.value.date().isoformat() if select.selected_name != "まだつくってない" else None,
             })
         if detail:
             # ヒットしたレシピの招待を取得する
