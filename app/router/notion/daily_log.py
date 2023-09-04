@@ -6,6 +6,7 @@ from app.interface.notion_client import NotionClient
 from app.util.authorize_checker import AuthorizeChecker
 from app.domain.notion.block.rich_text import RichTextBuilder
 from app.domain.notion.block import Paragraph
+from datetime import date as DateObject
 
 router = APIRouter()
 
@@ -37,9 +38,15 @@ async def add_text_daily_log(text: Text):
 @router.get("/")
 async def get_daily_log(Authorization: Optional[str] = Header(default=None)):
     """ Notionのデイリーログを取得する """
-    AuthorizeChecker.validate(access_token=Authorization)
     notion_client = NotionClient()
     return notion_client.get_daily_log()
+
+
+@router.get("/{date}/id", response_model=str)
+async def get_daily_log_id(date: DateObject):
+    """ NotionのデイリーログIDを取得する """
+    notion_client = NotionClient()
+    return notion_client.get_daily_log_id(date=date)
 
 
 class CreateWeeklyLogRequest(BaseModel):

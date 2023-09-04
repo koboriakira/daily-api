@@ -96,6 +96,12 @@ class NotionClient:
             aratas=aratas
         )
 
+    def get_daily_log_id(self, date: DateObject) -> str:
+        daily_log = self.__find_daily_log(date)
+        if daily_log is None:
+            raise Exception("Not found")
+        return daily_log["id"]
+
     def append_blocks(self, block_id: str, block: Block | list[Block]) -> None:
         """ 指定されたブロックを末尾に追加する """
         if isinstance(block, Block):
