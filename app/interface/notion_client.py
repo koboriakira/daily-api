@@ -376,6 +376,33 @@ class NotionClient:
             pass
         return recipes
 
+    def retrieve_webclips(self) -> list[dict]:
+        searched_prowrestlings = self.__query(
+            database_type=DatabaseType.WEBCLIP)["results"]
+        entities = []
+        for page in searched_prowrestlings:
+            properties = page["properties"]
+            title = Title.from_properties(properties)
+            last_edited_time = NotionDatetime.from_page_block(
+                kind=TimeKind.LAST_EDITED_TIME, block=page)
+            created_time = NotionDatetime.from_page_block(
+                kind=TimeKind.CREATED_TIME, block=page)
+            daily_log_id = self.__get_relation_ids(
+                properties=properties, key="デイリーログ")
+            clipped_url = Url.of(name="URL", param=properties["URL"])
+            status = Status.of(name="ステータス", param=properties["ステータス"])
+            entities.append({
+                "id": page["id"],
+                "url": page["url"],
+                "title": title.text,
+                "created_at": created_time.value,
+                "updated_at": last_edited_time.value,
+                "daily_log_id": daily_log_id,
+                "clipped_url": clipped_url.url,
+                "status": status.status_name
+            })
+        return entities
+
     def retrieve_musics(self) -> list[dict]:
         searched_musics = self.__query(
             database_type=DatabaseType.MUSIC)["results"]

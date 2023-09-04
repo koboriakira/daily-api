@@ -19,6 +19,7 @@ class DatabaseType(Enum):
     RECIPE = "64b6d5f1-2547-41a2-a74d-25f0c4df041e"
     PROWRESTLING = "2816de0d-9a02-4289-85c1-f54b2a14064a"
     BOOK = "cbe1dc60-5cb7-4c4a-9519-0accaea737df"
+    WEBCLIP = "b5e701d7-75d0-4355-8c59-dc3e2f0c09ac"
 
     @staticmethod
     def ignore_updated_at() -> list[str]:
