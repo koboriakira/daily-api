@@ -6,6 +6,7 @@ from datetime import timedelta
 import requests
 import os
 import json
+import yaml
 
 GAS_CALENDAR_API_URI = os.environ.get("GAS_CALENDAR_API_URI")
 
@@ -23,17 +24,26 @@ def get_calendar(start_date: DateObject, end_date: DateObject):
     response = requests.get(url)
     data = json.loads(response.text)
 
+    def read_yaml(content: str) -> dict:
+        return yaml.safe_load(content)
+
     def convert(data: list[dict], start_date: DateTimeObject, end_date: DateTimeObject):
         for schedule in data:
             start = DateTimeObject.fromisoformat(
                 schedule["start"]) + timedelta(hours=9)
             end = DateTimeObject.fromisoformat(
                 schedule["end"]) + timedelta(hours=9)
+            description = schedule["description"] if "description" in schedule else ""
+            try:
+                description = read_yaml(description)
+            except:
+                description = None
             if start_date.timestamp() <= start.timestamp() and end.timestamp() <= end_date.timestamp():
                 yield {
                     "start": start.isoformat(),
                     "end": end.isoformat(),
                     "title": schedule["title"],
+                    "detail": description,
                 }
 
     return list(convert(data,

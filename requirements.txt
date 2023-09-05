@@ -6,3 +6,4 @@ pytest
 requests
 slack_sdk
 python-multipart
+PyYAML
