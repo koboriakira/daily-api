@@ -7,8 +7,11 @@ import requests
 import os
 import json
 import yaml
+from pydantic import BaseModel
+from typing import Optional
 
-GAS_CALENDAR_API_URI = os.environ.get("GAS_CALENDAR_API_URI")
+GAS_DEPLOY_ID = os.environ.get("GAS_DEPLOY_ID")
+GAS_CALENDAR_API_URI = f"https://script.google.com/macros/s/{GAS_DEPLOY_ID}/exec"
 
 router = APIRouter()
 line_client = LineClientFactory.get_instance()
@@ -52,3 +55,25 @@ def get_calendar(start_date: DateObject, end_date: DateObject):
                         DateTimeObject(start_date.year,
                                        start_date.month, start_date.day),
                         DateTimeObject(end_date.year, end_date.month, end_date.day, 23, 59, 59)))
+
+
+class PostCalendarRequest(BaseModel):
+    category: str
+    start: DateTimeObject
+    end: DateTimeObject
+    title: str
+    detail: str
+
+
+@router.post("/calendar/")
+def post_calendar(request: PostCalendarRequest):
+    url = f"{GAS_CALENDAR_API_URI}"
+    data = {
+        "category": request.category,
+        "startTime": request.start.isoformat(),
+        "endTime": request.end.isoformat(),
+        "title": request.title,
+        "description": request.detail,
+    }
+    response = requests.post(url, json=data)
+    return response.text

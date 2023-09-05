@@ -19,7 +19,7 @@ env:
   LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
   LINE_TALK_ID: ${{ secrets.LINE_TALK_ID }}
   SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-  GAS_CALENDAR_API_URI: ${{ secrets.GAS_CALENDAR_API_URI }}
+  GAS_DEPLOY_ID: ${{ secrets.GAS_DEPLOY_ID }}
   SLACK_USER_TOKEN: ${{ secrets.SLACK_USER_TOKEN }}
 
 jobs:
@@ -62,14 +62,14 @@ jobs:
           ${{ env.ACCESS_TOKEN }} \
           ${{ env.LINE_CHANNEL_ACCESS_TOKEN }} \
           ${{ env.LINE_TALK_ID }} \
-          ${{ env.GAS_CALENDAR_API_URI }} \
+          ${{ env.GAS_DEPLOY_ID }} \
           ${{ env.SLACK_USER_TOKEN }} \
           ${{ env.SLACK_BOT_TOKEN }}
 
       - name: Post to a Slack channel
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          channel-id: 'C04Q3AV4TA5' # 通知チャンネル
+          channel-id: "C04Q3AV4TA5" # 通知チャンネル
           slack-message: "daily-apiのデプロイが完了しました。\nSpotifyを再有効化するため、アクセストークンの取得を手動で行ってください。\n<http://${{ env.AWS_EC2_IP }}/spotify/access_token>"
         env:
           SLACK_BOT_TOKEN: ${{ env.SLACK_BOT_TOKEN }}
