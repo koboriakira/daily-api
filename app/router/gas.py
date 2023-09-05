@@ -22,7 +22,8 @@ def get_calendar(start_date: DateObject, end_date: DateObject):
 
     url = f"{GAS_CALENDAR_API_URI}?startDate={replaced_start_date}&endDate={end_date}"
     response = requests.get(url)
-    data = json.loads(response.text)
+    # \xa0が入っているので、置換する
+    data = json.loads(response.text.replace("\xa0", " "))
 
     def read_yaml(content: str) -> dict:
         return yaml.safe_load(content)
