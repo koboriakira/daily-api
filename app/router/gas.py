@@ -40,6 +40,7 @@ def get_calendar(start_date: DateObject, end_date: DateObject):
                 description = None
             if start_date.timestamp() <= start.timestamp() and end.timestamp() <= end_date.timestamp():
                 yield {
+                    "category": schedule["category"],
                     "start": start.isoformat(),
                     "end": end.isoformat(),
                     "title": schedule["title"],
