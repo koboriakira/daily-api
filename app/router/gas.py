@@ -45,8 +45,8 @@ def get_calendar(start_date: DateObject, end_date: DateObject):
             if start_date.timestamp() <= start.timestamp() and end.timestamp() <= end_date.timestamp():
                 yield {
                     "category": schedule["category"],
-                    "start": start.isoformat(),
-                    "end": end.isoformat(),
+                    "start": start.strftime("%Y-%m-%d %H:%M:%S+09:00"),
+                    "end": end.strftime("%Y-%m-%d %H:%M:%S+09:00"),
                     "title": schedule["title"],
                     "detail": description,
                 }
@@ -65,7 +65,7 @@ class PostCalendarRequest(BaseModel):
     detail: str
 
 
-@router.post("/calendar/")
+@ router.post("/calendar/")
 def post_calendar(request: PostCalendarRequest):
     url = f"{GAS_CALENDAR_API_URI}"
     data = {
