@@ -9,6 +9,7 @@ import json
 import yaml
 from pydantic import BaseModel
 from typing import Optional
+import re
 
 GAS_DEPLOY_ID = os.environ.get("GAS_DEPLOY_ID")
 GAS_CALENDAR_API_URI = f"https://script.google.com/macros/s/{GAS_DEPLOY_ID}/exec"
@@ -39,8 +40,14 @@ def get_calendar(start_date: DateObject, end_date: DateObject):
                 schedule["end"]) + timedelta(hours=9)
             description = schedule["description"] if "description" in schedule else ""
             try:
+                # <br>タグは改行に置換する
+                description = description.replace("<br>", "\n")
+                # そのほかのHTMLタグはすべて置換する
+                description = re.sub(r"<[^>]*?>", "", description)
                 description = read_yaml(description)
             except:
+                print("yaml parse error")
+                print(description)
                 description = None
             if start_date.timestamp() <= start.timestamp() and end.timestamp() <= end_date.timestamp():
                 yield {
