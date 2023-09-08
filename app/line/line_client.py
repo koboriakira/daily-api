@@ -22,14 +22,24 @@ class LineClient:
         self.talk_id = talk_id
 
     def push_message(self, text: str) -> dict:
+        return self._post_message(
+            message={
+                "type": "text",
+                "text": text
+            })
+
+    def push_confirm_template(self, template: dict, alt_text: str = "確認メッセージ") -> None:
+        self._post_message(
+            message={
+                "type": "template",
+                "altText": alt_text,
+                "template": template
+            })
+
+    def _post_message(self, message: dict) -> dict:
         payload = json.dumps({
             "to": self.talk_id,
-            "messages": [
-                {
-                    "type": "text",
-                    "text": text
-                }
-            ]
+            "messages": [message]
         })
         headers = {
             'Content-Type': 'application/json',
@@ -37,6 +47,10 @@ class LineClient:
         }
         response = requests.request(
             "POST", self.MESSAGE_PUSH_API, headers=headers, data=payload)
+        if response.status_code != 200:
+            print(f"LINE API Error, status_code: {response.status_code}")
+            print(response.json())
+            raise Exception("LINE API Error")
         return response.json()
 
 
