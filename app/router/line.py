@@ -27,30 +27,16 @@ class Action(BaseModel):
     text: str
     type = "message"
 
-    def to_dict(self):
-        return {
-            "type": self.type,
-            "label": self.label,
-            "text": self.text
-        }
-
 
 class ConfirmTemplateRequest(BaseModel):
     text: str
     actions: list[Action]
     type = "confirm"
 
-    def to_dict(self):
-        return {
-            "type": self.type,
-            "text": self.text,
-            "actions": [action.to_dict() for action in self.actions]
-        }
-
 
 @router.post("/message/confirm_template", response_model=dict)
 def message_push(request: ConfirmTemplateRequest):
-    template = request.to_dict()
+    template = request.dict()
     print(template)
     line_client.push_confirm_template(template)
     return {
@@ -105,7 +91,7 @@ class LineWebhookRequest(BaseModel):
 
 @router.post("/webhook/")
 def message_push(request: LineWebhookRequest | Any):
-    print(request)
+    print(request.dict())
     if not isinstance(request, LineWebhookRequest):
         raise HTTPException(status_code=400, detail="Invalid request")
 
