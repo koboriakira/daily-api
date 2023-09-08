@@ -358,7 +358,8 @@ class NotionClient:
                 kind=TimeKind.CREATED_TIME, block=recipe)
             daily_log_id = self.__get_relation_ids(
                 properties=properties, key="デイリーログ")
-            select = Select.of(name="状態", param=properties["状態"])
+            select = Select.of(
+                name="状態", param=properties["状態"]) if "状態" in properties else None
 
             recipes.append({
                 "id": recipe["id"],
@@ -369,7 +370,7 @@ class NotionClient:
                 "daily_log_id": daily_log_id,
                 "ingredients": ingredients,
                 "meal_categories": [c.name for c in meal_categories.values] if meal_categories is not None else [],
-                "status": select.selected_name,
+                "status": select.selected_name if select is not None else "",
             })
         if detail:
             # ヒットしたレシピの招待を取得する
