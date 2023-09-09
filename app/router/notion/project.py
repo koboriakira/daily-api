@@ -70,7 +70,7 @@ class PostProjectRequest(BaseModel):
 
 @ router.post("/")
 def post_project(request: PostProjectRequest):
-    """ NotionのZettlekastenに新しいページを追加する """
+    """ Notionのプロジェクトに新しいページを追加する """
     notion_client = NotionClient()
     result = notion_client.create_project(
         title=request.title,
@@ -81,6 +81,23 @@ def post_project(request: PostProjectRequest):
         remind_date=request.remind_date)
     return {
         "url": result["url"],
+    }
+
+
+class UpdateProjectRequest(BaseModel):
+    status: Optional[str] = Field(title="プロジェクトのステータス",
+                                  default="Inbox",
+                                  regex=r"^(Today|Inbox|Scheduled|Trash)$")
+
+
+@ router.post("/{project_id}")
+def update_project(project_id: str, request: UpdateProjectRequest):
+    """ Notionのプロジェクトを更新する """
+    notion_client = NotionClient()
+    notion_client.update_project(project_block_id=project_id,
+                                 status=request.status)
+    return {
+        "success": True,
     }
 
 
