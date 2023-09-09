@@ -127,29 +127,29 @@ class NotionClient:
             return
         self.append_blocks(daily_log["id"], block)
 
-    def add_track(self, track: Track, daily_log_id: str) -> str:
+    def add_track(self, name: str, artists: list[str], spotify_url: str, cover_url: str, daily_log_id: str) -> str:
         """ 指定されたトラックを音楽データベースに追加する """
         # すでに存在するか確認
         data = self.__query_with_title_filter(
             database_type=DatabaseType.MUSIC,
-            title=track.name)
+            title=name)
         if data is not None:
+            print("Track is already registered")
             return data
 
         # タグを作成
         tag_page_ids = []
-        for artist in track.artists:
-            page_id = self.add_tag(name=artist["name"])
+        for artist in artists:
+            page_id = self.add_tag(name=artist)
             tag_page_ids.append(page_id)
 
         # 新しいページを作成
-        artist_name = ",".join(list(map(lambda a: a["name"], track.artists)))
-        spotify_url = track.external_urls["spotify"]
+        artist_name = ",".join(artists)
         result = self.__create_page_in_database(
             database_type=DatabaseType.MUSIC,
-            cover=Cover.from_external_url(track.album["images"][0]["url"]),
+            cover=Cover.from_external_url(cover_url),
             properties=[
-                Title.from_plain_text(name="名前", text=track.name),
+                Title.from_plain_text(name="名前", text=name),
                 Text.from_plain_text(name="Artist", text=artist_name),
                 Relation.from_id_list(name="タグ", id_list=tag_page_ids),
                 Relation.from_id(name="デイリーログ", id=daily_log_id),
@@ -157,6 +157,7 @@ class NotionClient:
             ]
         )
 
+        print(result)
         return result
 
     def add_album(self, album: Album, daily_log_id: str) -> dict:
@@ -758,6 +759,10 @@ class NotionClient:
             yield page
 
     def test(self):
+        data = self.__query_with_title_filter(
+            database_type=DatabaseType.MUSIC,
+            title="掃除の機運")
+        print(data)
         pass
 
 

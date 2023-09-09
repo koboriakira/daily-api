@@ -33,5 +33,31 @@ async def get_music():
     return convert_to_model(music_entities)
 
 
+class PostMusicRequest(BaseModel):
+    name: str = Field(..., title="曲名")
+    artists: list[str] = Field(..., title="アーティスト名")
+    spotify_url: str = Field(..., title="SpotifyのURL",
+                             regex=r"^https://open.spotify.com/.*")
+    cover_url: str = Field(..., title="カバー画像のURL",
+                           regex=r"^https://i.scdn.co/image/.*")
+
+
+@ router.post("/", response_model=dict)
+async def post_music(request: PostMusicRequest):
+    """ 音楽を取得 """
+    notion_client = NotionClient()
+
+    daily_log_id = notion_client.get_daily_log_id(date=DateObject.today())
+    result = notion_client.add_track(name=request.name,
+                                     artists=request.artists,
+                                     spotify_url=request.spotify_url,
+                                     cover_url=request.cover_url,
+                                     daily_log_id=daily_log_id)
+    return {
+        "page_id": result["id"],
+        "url": result["url"]
+    }
+
+
 def convert_to_model(entities: list[dict]) -> list[Music]:
     return [Music(**entity) for entity in entities]
