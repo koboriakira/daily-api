@@ -503,6 +503,28 @@ class NotionClient:
             })
         return entities
 
+    def append_comment(self, page_id: str, text: str):
+        """ 指定されたページにコメントを追加する """
+        return self.client.comments.create(
+            parent={
+                "page_id": page_id
+            },
+            rich_text=[
+                {
+                    "text": {
+                        "content": text
+                    }
+                }
+            ],
+        )
+
+    def retrieve_comments(self, page_id: str) -> list[dict]:
+        """ 指定されたページのコメントを取得する """
+        comments = self.client.comments.list(
+            block_id=page_id
+        )
+        return comments["results"]
+
     def __create_page_in_database(self, database_type: DatabaseType, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """
         return self.client.pages.create(
@@ -728,5 +750,6 @@ def create_mention_bulleted_list_item(page_id: str) -> dict:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    # notion_client.set_today_to_inprogress()
-    notion_client.test()
+    daily_log_id = notion_client.get_daily_log_id(DateObject.today())
+    result = notion_client.append_comment(page_id=daily_log_id, text="test2")
+    print(result)
