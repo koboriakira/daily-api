@@ -216,7 +216,7 @@ class NotionClient:
     def create_weekly_log(self, year: int, isoweeknum: int) -> None:
         """ 指定された年と週から週報ページを作成する """
         # ウィークリーログを作成
-        weekly_log_entity = self.__find_weekly_log(year, isoweeknum)
+        weekly_log_entity = self.find_weekly_log(year, isoweeknum)
         if weekly_log_entity is None:
             weekly_log_entity = self.__create_weekly_log_page(year, isoweeknum)
 
@@ -596,7 +596,7 @@ class NotionClient:
                 Relation.from_id_list(name="💭 ウィークリーログ", id_list=[weekly_log_id])]
         )
 
-    def __find_weekly_log(self, year: int, isoweeknum: int) -> Optional[dict]:
+    def find_weekly_log(self, year: int, isoweeknum: int) -> Optional[dict]:
         return self.__query_with_title_filter(
             database_type=DatabaseType.WEEKLY_LOG,
             title=f"{year}-Week{isoweeknum}"

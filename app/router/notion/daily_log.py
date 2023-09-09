@@ -3,7 +3,6 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional, Union
 from app.interface.notion_client import NotionClient
-from app.util.authorize_checker import AuthorizeChecker
 from app.domain.notion.block.rich_text import RichTextBuilder
 from app.domain.notion.block import Paragraph
 from datetime import date as DateObject
@@ -47,20 +46,3 @@ async def get_daily_log_id(date: DateObject):
     """ NotionのデイリーログIDを取得する """
     notion_client = NotionClient()
     return notion_client.get_daily_log_id(date=date)
-
-
-class CreateWeeklyLogRequest(BaseModel):
-    year: int
-    isoweeknum: int
-
-
-@router.post("/weekly", response_model=dict)
-async def create_weekly_log(request: CreateWeeklyLogRequest):
-    """ 指定された週のウィークリーログを作成する """
-    """ ウィークリーログを作成する """
-    notion_client = NotionClient()
-    notion_client.create_weekly_log(year=request.year,
-                                    isoweeknum=request.isoweeknum)
-    return {
-        "success": True,
-    }
