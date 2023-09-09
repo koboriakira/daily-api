@@ -691,6 +691,7 @@ class NotionClient:
         return list(map(lambda b: BlockFactory.create(b), block_entities))
 
     def __append_block_children(self, block_id: str, children=list[dict]) -> list:
+        print(children)
         self.client.blocks.children.append(
             block_id=block_id, children=children)
 

@@ -5,7 +5,7 @@ from typing import Optional, Union
 from app.interface.notion_client import NotionClient
 from app.util.authorize_checker import AuthorizeChecker
 from app.domain.notion.block.rich_text import RichTextBuilder
-from app.domain.notion.block import Paragraph
+from app.domain.notion.block import Paragraph, Heading
 
 router = APIRouter()
 
@@ -59,6 +59,23 @@ async def append_relation(block_id: str, request: AppendRelationRequest):
             "success": True
         }
     raise Exception("Not supported type")
+
+
+class AppendHeadingRequest(BaseModel):
+    size: int  # 1~6
+    text: str
+
+
+@router.post("/{block_id}/heading", response_model=dict[str, bool])
+async def append_heading(block_id: str, request: AppendHeadingRequest):
+    """ 指定された見出しタグをNotionのページに追加する """
+    notion_client = NotionClient()
+    heading = Heading.from_plain_text(
+        heading_size=request.size, text=request.text)
+    notion_client.append_blocks(block_id=block_id, block=heading)
+    return {
+        "success": True
+    }
 
 
 @router.get("/")
