@@ -753,11 +753,7 @@ class NotionClient:
             yield page
 
     def test(self):
-        tracks = self.__query(
-            database_type=DatabaseType.MUSIC,
-        )
-        track = tracks["results"][0]
-        print(track)
+        pass
 
 
 def valid_datetime(target: datetime, from_date: datetime, to_date: datetime) -> bool:
@@ -787,6 +783,4 @@ def create_mention_bulleted_list_item(page_id: str) -> dict:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    daily_log_id = notion_client.get_daily_log_id(DateObject.today())
-    result = notion_client.append_comment(page_id=daily_log_id, text="test2")
-    print(result)
+    notion_client.test()

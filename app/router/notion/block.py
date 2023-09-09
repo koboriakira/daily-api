@@ -37,6 +37,30 @@ async def add_text_block(block: TextBlock):
     return True
 
 
+class AppendRelationRequest(BaseModel):
+    block_id: str
+    type: str = "page"  # いったんpageのみ対応
+
+
+@router.post("/{block_id}/relation", response_model=dict[str, bool])
+async def append_relation(block_id: str, request: AppendRelationRequest):
+    """ 指定されたバックリンクをNotionのページに追加する """
+    notion_client = NotionClient()
+
+    # テキスト
+    if request.type == "page":
+        rich_text = RichTextBuilder\
+            .get_instance()\
+            .add_page_mention(page_id=request.block_id)\
+            .build()
+        paragraph = Paragraph.from_rich_text(rich_text=rich_text)
+        notion_client.append_blocks(block_id=block_id, block=paragraph)
+        return {
+            "success": True
+        }
+    raise Exception("Not supported type")
+
+
 @router.get("/")
 async def get_daily_log(Authorization: Optional[str] = Header(default=None)):
     """ Notionのデイリーログを取得する """
