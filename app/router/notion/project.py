@@ -10,6 +10,16 @@ from datetime import timedelta
 router = APIRouter()
 
 
+class ProjectStatusList:
+    VALUES = ["IceBox", "Suspend", "Inbox", "Next action", "Not started",
+              "In progress", "Today", "Scheduled", "Done", "Archived", "Trash"]
+
+    @classmethod
+    def to_regex(cls) -> str:
+        list = "|".join(cls.VALUES)
+        return r"^(" + list + r")$"
+
+
 class Task(BaseModel):
     id: str = Field(..., title="タスクのID")
     title: str = Field(..., title="タスクのタイトル")
@@ -60,7 +70,7 @@ class PostProjectRequest(BaseModel):
     goal: str = Field(title="プロジェクトのゴール")
     status: Optional[str] = Field(title="プロジェクトのステータス",
                                   default="Inbox",
-                                  regex=r"^(Today|Inbox|Scheduled)$")
+                                  regex=ProjectStatusList.to_regex())
     start_date: Optional[DateObject] = Field(title="プロジェクトの開始日", default=None)
     end_date: Optional[DateObject] = Field(title="プロジェクトの終了日",
                                            default=None)
@@ -87,7 +97,7 @@ def post_project(request: PostProjectRequest):
 class UpdateProjectRequest(BaseModel):
     status: Optional[str] = Field(title="プロジェクトのステータス",
                                   default="Inbox",
-                                  regex=r"^(Today|Inbox|Scheduled|Trash)$")
+                                  regex=ProjectStatusList.to_regex())
 
 
 @ router.post("/{project_id}")
