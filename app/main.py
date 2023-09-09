@@ -1,6 +1,6 @@
 from app.router import healthcheck
 from app.router.spotify import access_token, track, current_user_recently_played
-from app.router.notion import daily_log, block, zettlekasten, project, recipe, music, prowrestling, book, webclip
+from app.router.notion import daily_log, block, zettlekasten, project, recipe, music, prowrestling, book, webclip, comment
 from app.router import line
 from app.router import gas
 from app.router import slack
@@ -37,6 +37,8 @@ app.include_router(webclip.router,
                    prefix="/notion/webclip", tags=["notion"])
 app.include_router(block.router,
                    prefix="/notion/block", tags=["notion"])
+app.include_router(comment.router,
+                   prefix="/notion/comment", tags=["notion"])
 app.include_router(line.router,
                    prefix="/line", tags=["line"])
 app.include_router(gas.router,

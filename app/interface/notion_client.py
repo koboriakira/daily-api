@@ -157,7 +157,6 @@ class NotionClient:
             ]
         )
 
-        # URLを返す
         return result
 
     def add_album(self, album: Album, daily_log_id: str) -> dict:
@@ -220,7 +219,6 @@ class NotionClient:
         weekly_log_entity = self.__find_weekly_log(year, isoweeknum)
         if weekly_log_entity is None:
             weekly_log_entity = self.__create_weekly_log_page(year, isoweeknum)
-        print(weekly_log_entity)
 
         # 開始日から終了日までのデイリーログを作成
         # 指定さらた年とISO週から開始日、終了日を取得
@@ -229,11 +227,19 @@ class NotionClient:
         # datetimeをdateに変換
         start_date = datetime.date(start_date)
         for i in range(7):
-            date = start_date + timedelta(days=i)
-            daily_log = self.__find_daily_log(date)
-            if daily_log is None:
-                daily_log = self.__create_daily_log_page(
-                    date=date, weekly_log_id=weekly_log_entity["id"])
+            daily_date = start_date + timedelta(days=i)
+            if (_daily_log := self.__find_daily_log(date)) is None:
+                _daily_log = self.__create_daily_log_page(date=daily_date,
+                                                          weekly_log_id=weekly_log_entity["id"])
+            if i == 5:
+                # 週次レビューのプロジェクトを作成
+                self.create_project(title=f"{year}-Week{isoweeknum}週次レビュー",
+                                    goal="今週のふりかえり、目標達成の確認をして、来週の目標を立てる",
+                                    start_date=daily_date,
+                                    status="Scheduled",
+                                    end_date=daily_date + timedelta(days=1),
+                                    remind_date=daily_date,
+                                    )
 
     def set_today_to_inprogress(self) -> None:
         """
@@ -315,6 +321,37 @@ class NotionClient:
                         })
 
         return projects
+
+    def create_project(self,
+                       title: str,
+                       start_date: DateObject,
+                       goal: Optional[str] = None,
+                       status: Optional[str] = None,
+                       end_date: Optional[DateObject] = None,
+                       remind_date: Optional[DateObject] = None,) -> None:
+        """ プロジェクトデータベースに新しいプロジェクトを追加する """
+        properties = [
+            Title.from_plain_text(name="名前", text=title),
+        ]
+        if end_date is not None:
+            properties.append(Date.from_range(
+                name="期間", start=start_date, end=end_date))
+        else:
+            properties.append(Date.from_start_date(
+                name="期間", start_date=start_date))
+        if goal is not None:
+            properties.append(Text.from_plain_text(name="ゴール", text=goal))
+        if status is not None:
+            properties.append(Status.from_status_name(
+                name="ステータス", status_name=status))
+        if remind_date is not None:
+            properties.append(Date.from_start_date(
+                name="リマインド", start_date=remind_date))
+
+        return self.__create_page_in_database(
+            database_type=DatabaseType.PROJECT,
+            properties=properties
+        )
 
     def update_project(self,
                        project_block_id: str,
