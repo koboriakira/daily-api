@@ -10,30 +10,30 @@ from app.domain.notion.block import Paragraph, Heading
 router = APIRouter()
 
 
-class TextBlock(BaseModel):
-    block_id: str
-    content: Union[list[str], str]
+class AppendTextRequest(BaseModel):
+    text: str | list[str]
 
 
-@router.post("/text", response_model=bool)
-async def add_text_block(block: TextBlock):
+@router.post("/{block_id}/text", response_model=bool)
+async def append_text(block_id: str, request: AppendTextRequest):
     """ 指定されたテキストをNotionのページに追加する """
     notion_client = NotionClient()
 
     # テキスト
-    if isinstance(block.content, str):
-        rich_text = RichTextBuilder.get_instance().add_text(block.content).build()
+    text = request.text
+    if isinstance(text, str):
+        rich_text = RichTextBuilder.get_instance().add_text(text).build()
         paragraph = Paragraph.from_rich_text(rich_text=rich_text)
-        notion_client.append_blocks(block_id=block.block_id, block=paragraph)
+        notion_client.append_blocks(block_id=block_id, block=paragraph)
         return True
 
     # リスト
     blocks = []
-    for text_content in block.content:
+    for text_content in text:
         rich_text = RichTextBuilder.get_instance().add_text(text_content).build()
         paragraph = Paragraph.from_rich_text(rich_text=rich_text)
         blocks.append(paragraph)
-    notion_client.append_blocks(block_id=block.block_id, block=blocks)
+    notion_client.append_blocks(block_id=block_id, block=blocks)
     return True
 
 
