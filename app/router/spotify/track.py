@@ -3,6 +3,8 @@ from fastapi import APIRouter
 from app.interface.notion_client import NotionClient
 from app.model.url import NotionUrl
 from app.model.spotify.track import Track as TrackEntity
+from app.model.spotify.track import TrackConverter
+
 from typing import Optional
 router = APIRouter()
 
@@ -29,6 +31,16 @@ async def add_track_to_notion(track_id: str):
         result = notion_client.add_album(
             album=album, daily_log_id=daily_log_id)
         return NotionUrl(url=result["url"], block_id=result["id"])
+
+
+@router.get("/{track_id}", response_model=TrackEntity)
+async def get_track(track_id: str):
+    """
+    指定されたSpotifyの曲の情報を取得する。
+    """
+    spotify_controller = SpotifyController.get_instance()
+    track = spotify_controller.get_track(track_id=track_id)
+    return TrackConverter.from_track_model(track=track)
 
 
 @router.get("/recommend/{track_id}", response_model=TrackEntity)

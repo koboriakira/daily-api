@@ -6,8 +6,9 @@ from app.domain.spotify.track import Track as TrackModel
 class Track(BaseModel):
     id: str = Field(description="Spotify ID of the track")
     name: str = Field(description="Name of the track")
-    artist: str = Field(description="Name of the artist")
+    artist: list[str] = Field(description="Name of the artist")
     spotify_url: str = Field(description="Spotify URL of the track")
+    cover_url: str = Field(description="Cover URL of the track")
 
     def __hash__(self):
         return hash(self.id)
@@ -23,12 +24,12 @@ class RecentlyPlayedTrack(Track):
 class TrackConverter:
     @staticmethod
     def from_track_model(track: TrackModel) -> Track:
-        print(track)
         return Track(
             id=track.id,
             name=track.name,
-            artist=track.artists[0]["name"],
+            artist=[artist["name"] for artist in track.artists],
             spotify_url=track.spotify_url,
+            cover_url=track.album["images"][0]["url"]
         )
 
 
@@ -38,7 +39,8 @@ class RecentlyPlayedTrackConverter:
         return RecentlyPlayedTrack(
             id=item.track.id,
             name=item.track.name,
-            artist=item.track.artists[0]["name"],
+            artist=[artist["name"] for artist in item.track.artists],
             spotify_url=item.track.spotify_url,
+            cover_url=item.track.album["images"][0]["url"],
             played_at=item.played_at
         )
