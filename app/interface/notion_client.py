@@ -270,7 +270,8 @@ class NotionClient:
 
     def find_projects(self,
                       status_list: list[Status] = [],
-                      remind_date: Optional[DateObject] = None) -> list[dict]:
+                      remind_date: Optional[DateObject] = None,
+                      get_detail: bool = True) -> list[dict]:
         """ プロジェクトデータベースの全てのページを取得する """
         status_name_list = [
             status.status_name for status in status_list]
@@ -298,6 +299,9 @@ class NotionClient:
                 "created_at": project["created_time"],
                 "updated_at": project["last_edited_time"],
             })
+
+        if not get_detail:
+            return projects
 
         # ヒットしたプロジェクトのタスクを取得する
         for project in projects:

@@ -14,6 +14,9 @@ class ProjectStatusList:
     VALUES = ["IceBox", "Suspend", "Inbox", "Next action", "Not started",
               "In progress", "Today", "Scheduled", "Done", "Archived", "Trash"]
 
+    ALL_VALUES = ["In progress", "Today", "Inbox", "Not started",
+                  "Next action"]
+
     @classmethod
     def to_regex(cls) -> str:
         list = "|".join(cls.VALUES)
@@ -40,12 +43,14 @@ class Project(BaseModel):
 
 
 @router.get("/")
-async def get_projects(status: str):
+async def get_projects(status: Optional[str] = None):
     """ NotionのZettlekastenに新しいページを追加する """
     notion_client = NotionClient()
 
     status_list = _get_status_list(status)
-    projects = notion_client.find_projects(status_list=status_list)
+    get_detail_flag = True if status is not None else False
+    projects = notion_client.find_projects(status_list=status_list,
+                                           get_detail=get_detail_flag)
 
     project_model_list = []
     for project in projects:
@@ -56,7 +61,7 @@ async def get_projects(status: str):
             .fromisoformat(project["updated_at"].replace("Z", "+00:00"))\
             .astimezone() + timedelta(hours=9)
         task_model_list = []
-        for task in project["tasks"]:
+        for task in project["tasks"] if "tasks" in project else []:
             print(task)
             task_model_list.append(Task(**task))
         project["tasks"] = task_model_list
@@ -111,15 +116,11 @@ def update_project(project_id: str, request: UpdateProjectRequest):
     }
 
 
-def _get_status_list(status_str: str) -> list[Status]:
+def _get_status_list(status_str: Optional[str]) -> list[Status]:
+    if status_str is None:
+        return [Status.from_status_name("ステータス", s) for s in ProjectStatusList.VALUES]
     if status_str.lower() == "all":
-        return [
-            Status.from_status_name("ステータス", "In Progress"),
-            Status.from_status_name("ステータス", "Today"),
-            Status.from_status_name("ステータス", "Inbox"),
-            Status.from_status_name("ステータス", "Not started"),
-            Status.from_status_name("ステータス", "Next action"),
-        ]
+        return [Status.from_status_name("ステータス", s) for s in ProjectStatusList.ALL_VALUES]
     else:
         return [Status.from_status_name(
             "ステータス", s) for s in status_str.split(",")]
