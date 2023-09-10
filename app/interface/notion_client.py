@@ -269,10 +269,11 @@ class NotionClient:
             ]
         )
 
-    def find_projects(self,
-                      status_list: list[Status] = [],
-                      remind_date: Optional[DateObject] = None,
-                      get_detail: bool = True) -> list[dict]:
+    def retrieve_projects(self,
+                          status_list: list[Status] = [],
+                          remind_date: Optional[DateObject] = None,
+                          goal_id: Optional[str] = None,
+                          get_detail: bool = True) -> list[dict]:
         """ プロジェクトデータベースの全てのページを取得する """
         status_name_list = [
             status.status_name for status in status_list]
@@ -283,8 +284,14 @@ class NotionClient:
         projects = []
         for project in searched_projects:
             properties = project["properties"]
+            goal_id_list = self.__get_relation_ids(
+                properties=properties, key="目標")
+            if goal_id is not None and goal_id not in goal_id_list:
+                continue
             title = Title.from_properties(properties)
             status = Status.of(name="ステータス", param=properties["ステータス"])
+            daily_log_id = self.__get_relation_ids(
+                properties=properties, key="デイリーログ")
             if len(status_name_list) > 0 and status.status_name not in status_name_list:
                 continue
             if remind_date is not None:
@@ -292,13 +299,19 @@ class NotionClient:
                     name="リマインド", param=properties["リマインド"])
                 if project_remind_date.start != remind_date.isoformat():
                     continue
+            last_edited_time = NotionDatetime.from_page_block(
+                kind=TimeKind.LAST_EDITED_TIME, block=project)
+            created_time = NotionDatetime.from_page_block(
+                kind=TimeKind.CREATED_TIME, block=project)
             projects.append({
                 "id": project["id"],
                 "url": project["url"],
+                "daily_log_id": daily_log_id,
+                "goal_id_list": goal_id_list,
                 "status": status.status_name,
                 "title": title.text,
-                "created_at": project["created_time"],
-                "updated_at": project["last_edited_time"],
+                "created_at": created_time.value,
+                "updated_at": last_edited_time.value,
             })
 
         if not get_detail:

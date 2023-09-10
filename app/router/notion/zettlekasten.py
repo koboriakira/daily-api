@@ -7,7 +7,7 @@ from app.util.authorize_checker import AuthorizeChecker
 from app.domain.notion.block.rich_text import RichTextBuilder
 from app.domain.notion.block import Paragraph
 from app.model import NotionUrl
-from app.router.notion.page_base_model import PageBaseModel
+from app.router.notion.model.page_base_model import PageBaseModel
 
 router = APIRouter()
 

@@ -1,3 +1,4 @@
+from app.router.notion.model.project_model import Project, Task, convert_to_model
 from pydantic import BaseModel, Field
 from fastapi import APIRouter
 from typing import Optional
@@ -23,51 +24,16 @@ class ProjectStatusList:
         return r"^(" + list + r")$"
 
 
-class Task(BaseModel):
-    id: str = Field(..., title="タスクのID")
-    title: str = Field(..., title="タスクのタイトル")
-    status: str = Field(..., title="タスクのステータス")
-    implementation_date: Optional[str] = Field(..., title="タスクの実施予定日",
-                                               regex=r"^\d{4}-\d{2}-\d{2}$")
-
-
-class Project(BaseModel):
-    id: str = Field(..., title="プロジェクトのID")
-    title: str = Field(..., title="プロジェクトのタイトル")
-    url: str = Field(..., title="プロジェクトのURL",
-                     regex=r"^https://www.notion.so/.*")
-    status: str = Field(..., title="プロジェクトのステータス")
-    tasks: list[Task] = Field(..., title="プロジェクトのタスク")
-    created_at: DatetimeObject = Field(..., title="プロジェクトの最終更新日時")
-    updated_at: DatetimeObject = Field(..., title="プロジェクトの最終更新日時")
-
-
-@router.get("/")
+@router.get("/", response_model=list[Project])
 async def get_projects(status: Optional[str] = None):
     """ NotionのZettlekastenに新しいページを追加する """
     notion_client = NotionClient()
 
     status_list = _get_status_list(status)
     get_detail_flag = True if status is not None else False
-    projects = notion_client.find_projects(status_list=status_list,
-                                           get_detail=get_detail_flag)
-
-    project_model_list = []
-    for project in projects:
-        project["created_at"] = DatetimeObject\
-            .fromisoformat(project["created_at"].replace("Z", "+00:00"))\
-            .astimezone() + timedelta(hours=9)
-        project["updated_at"] = DatetimeObject\
-            .fromisoformat(project["updated_at"].replace("Z", "+00:00"))\
-            .astimezone() + timedelta(hours=9)
-        task_model_list = []
-        for task in project["tasks"] if "tasks" in project else []:
-            print(task)
-            task_model_list.append(Task(**task))
-        project["tasks"] = task_model_list
-        project_model_list.append(Project(**project))
-
-    return projects
+    projects = notion_client.retrieve_projects(status_list=status_list,
+                                               get_detail=get_detail_flag)
+    return convert_to_model(projects)
 
 
 class PostProjectRequest(BaseModel):

@@ -1,4 +1,4 @@
-from app.router.notion.page_base_model import PageBaseModel
+from app.router.notion.model.page_base_model import PageBaseModel
 from pydantic import BaseModel, Field
 from fastapi import APIRouter
 from typing import Optional
