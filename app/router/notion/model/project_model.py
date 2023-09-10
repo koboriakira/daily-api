@@ -17,5 +17,5 @@ class Project(PageBaseModel):
     tasks: Optional[list[Task]] = Field(title="タスクのリスト", default=None)
 
 
-def convert_to_model(entites: list[dict]) -> list[Project]:
+def convert_to_project_model(entites: list[dict]) -> list[Project]:
     return [Project(**entity) for entity in entites]

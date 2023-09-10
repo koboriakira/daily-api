@@ -1,4 +1,4 @@
-from app.router.notion.model.project_model import Project, Task, convert_to_model
+from app.router.notion.model.project_model import Project, Task, convert_to_project_model
 from pydantic import BaseModel, Field
 from fastapi import APIRouter
 from typing import Optional
@@ -33,7 +33,7 @@ async def get_projects(status: Optional[str] = None):
     get_detail_flag = True if status is not None else False
     projects = notion_client.retrieve_projects(status_list=status_list,
                                                get_detail=get_detail_flag)
-    return convert_to_model(projects)
+    return convert_to_project_model(projects)
 
 
 class PostProjectRequest(BaseModel):
