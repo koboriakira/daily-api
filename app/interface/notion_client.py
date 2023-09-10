@@ -229,9 +229,9 @@ class NotionClient:
         start_date = datetime.date(start_date)
         for i in range(7):
             daily_date = start_date + timedelta(days=i)
-            if (_daily_log := self.__find_daily_log(date)) is None:
-                _daily_log = self.__create_daily_log_page(date=daily_date,
-                                                          weekly_log_id=weekly_log_entity["id"])
+            if (_daily_log := self.__find_daily_log(daily_date)) is None:
+                _created_daily_log = self.__create_daily_log_page(date=daily_date,
+                                                                  weekly_log_id=weekly_log_entity["id"])
             if i == 5:
                 # 週次レビューのプロジェクトを作成
                 self.create_project(title=f"{year}-Week{isoweeknum}週次レビュー",
