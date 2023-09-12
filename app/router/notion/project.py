@@ -25,14 +25,15 @@ class ProjectStatusList:
 
 
 @router.get("/", response_model=list[Project])
-async def get_projects(status: Optional[str] = None):
+async def get_projects(status: Optional[str] = None, remind_date: Optional[DateObject] = None):
     """ NotionのZettlekastenに新しいページを追加する """
     notion_client = NotionClient()
 
     status_list = _get_status_list(status)
     get_detail_flag = True if status is not None else False
     projects = notion_client.retrieve_projects(status_list=status_list,
-                                               get_detail=get_detail_flag)
+                                               get_detail=get_detail_flag,
+                                               remind_date=remind_date)
     return convert_to_project_model(projects)
 
 
