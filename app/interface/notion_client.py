@@ -615,10 +615,21 @@ class NotionClient:
         )
 
     def find_weekly_log(self, year: int, isoweeknum: int) -> Optional[dict]:
-        return self.__query_with_title_filter(
+        weekly_log = self.__query_with_title_filter(
             database_type=DatabaseType.WEEKLY_LOG,
             title=f"{year}-Week{isoweeknum}"
         )
+
+        properties = weekly_log["properties"]
+        title = Title.from_properties(properties)
+        goal = Text.from_dict(name="目標", param=properties["目標"])
+
+        return {
+            "id": weekly_log["id"],
+            "url": weekly_log["url"],
+            "title": title.text,
+            "goal": goal.text,
+        }
 
     def __create_weekly_log_page(self, year: int, isoweeknum: int) -> dict:
         title_text = f"{year}-Week{isoweeknum}"
