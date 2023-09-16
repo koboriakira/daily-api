@@ -619,6 +619,8 @@ class NotionClient:
             database_type=DatabaseType.WEEKLY_LOG,
             title=f"{year}-Week{isoweeknum}"
         )
+        if weekly_log is None:
+            return None
 
         properties = weekly_log["properties"]
         title = Title.from_properties(properties)
@@ -647,7 +649,7 @@ class NotionClient:
             ]
         )
 
-    def __query_with_title_filter(self, database_type: DatabaseType, title: str) -> list[dict]:
+    def __query_with_title_filter(self, database_type: DatabaseType, title: str) -> Optional[dict]:
         data = self.__query(database_type=database_type)
         for page in data["results"]:
             title_field = Title.from_properties(page["properties"])
