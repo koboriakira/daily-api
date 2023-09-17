@@ -15,6 +15,7 @@ class Project(PageBaseModel):
     goal_id_list: list[str] = Field(..., title="目標のIDのリスト")
     status: str = Field(..., title="プロジェクトのステータス")
     tasks: Optional[list[Task]] = Field(title="タスクのリスト", default=None)
+    is_thisweek: bool = Field(..., title="今週やるプロジェクトかどうか")
 
 
 def convert_to_project_model(entites: list[dict]) -> list[Project]:

@@ -2,7 +2,7 @@ import os
 from notion_client import Client
 from app.domain.spotify.track import Track
 from app.domain.spotify.album import Album
-from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, Select
+from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, Select, Checkbox
 from app.domain.notion import Cover, NotionDatetime, TimeKind
 from app.domain.notion.database.database_type import DatabaseType
 from app.domain.notion.block import BlockFactory, Block, ChildDatabase
@@ -273,7 +273,8 @@ class NotionClient:
                           status_list: list[Status] = [],
                           remind_date: Optional[DateObject] = None,
                           goal_id: Optional[str] = None,
-                          get_detail: bool = True) -> list[dict]:
+                          get_detail: bool = True,
+                          filter_thisweek: bool = False,) -> list[dict]:
         """ プロジェクトデータベースの全てのページを取得する """
         status_name_list = [
             status.status_name for status in status_list]
@@ -284,21 +285,28 @@ class NotionClient:
         projects = []
         for project in searched_projects:
             properties = project["properties"]
+            # 目標
             goal_id_list = self.__get_relation_ids(
                 properties=properties, key="目標")
             if goal_id is not None and goal_id not in goal_id_list:
                 continue
-            title = Title.from_properties(properties)
+            # 今週やる
+            is_thisweek = Checkbox.of(name="今週やる", param=properties["今週やる"])
+            if filter_thisweek and not is_thisweek.checked:
+                continue
+            # ステータス
             status = Status.of(name="ステータス", param=properties["ステータス"])
             daily_log_id = self.__get_relation_ids(
                 properties=properties, key="デイリーログ")
             if len(status_name_list) > 0 and status.status_name not in status_name_list:
                 continue
+            # リマインド日
             if remind_date is not None:
                 project_remind_date = Date.of(
                     name="リマインド", param=properties["リマインド"])
                 if project_remind_date.start != remind_date.isoformat():
                     continue
+            title = Title.from_properties(properties)
             last_edited_time = NotionDatetime.from_page_block(
                 kind=TimeKind.LAST_EDITED_TIME, block=project)
             created_time = NotionDatetime.from_page_block(
@@ -310,6 +318,7 @@ class NotionClient:
                 "goal_id_list": goal_id_list,
                 "status": status.status_name,
                 "title": title.text,
+                "is_thisweek": is_thisweek.checked,
                 "created_at": created_time.value,
                 "updated_at": last_edited_time.value,
             })
@@ -785,9 +794,7 @@ class NotionClient:
             yield page
 
     def test(self):
-        data = self.__query_with_title_filter(
-            database_type=DatabaseType.MUSIC,
-            title="掃除の機運")
+        data = self.__retrieve_page(page_id="fef84ea45b7d494c843fb426eb5606ac")
         print(data)
         pass
 
