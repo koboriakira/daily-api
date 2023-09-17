@@ -79,6 +79,7 @@ class NotionClient:
 
         return DailyLog(
             id=daily_log["id"],
+            url=daily_log["url"],
             created_time=daily_log["created_time"],
             last_edited_time=daily_log["last_edited_time"],
             parent=daily_log["parent"],

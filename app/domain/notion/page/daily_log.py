@@ -16,6 +16,7 @@ from datetime import datetime
 @dataclass
 class DailyLog(BasePage):
     date: Date  # 日付
+    url: str  # URL
     summary: str  # 一言
     recipes: list[Recipe]  # レシピ
     webclips: list[Webclip]  # Webクリップ
@@ -33,6 +34,7 @@ class DailyLog(BasePage):
                  parent: dict,
                  archived: bool,
                  date: Date,
+                 url: str,
                  summary: str,
                  recipes: list[str],
                  webclips: list[Webclip],
@@ -49,6 +51,7 @@ class DailyLog(BasePage):
         self.parent = parent
         self.archived = archived
         self.date = date
+        self.url = url
         self.summary = summary
         self.recipes = recipes
         self.webclips = webclips

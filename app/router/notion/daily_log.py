@@ -35,10 +35,10 @@ async def add_text_daily_log(text: Text):
 
 
 @router.get("/")
-async def get_daily_log(Authorization: Optional[str] = Header(default=None)):
+async def get_daily_log(date: Optional[DateObject] = None):
     """ Notionのデイリーログを取得する """
     notion_client = NotionClient()
-    return notion_client.get_daily_log()
+    return notion_client.get_daily_log(date=date)
 
 
 @router.get("/{date}/id", response_model=str)
