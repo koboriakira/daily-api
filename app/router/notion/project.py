@@ -13,10 +13,10 @@ router = APIRouter()
 
 class ProjectStatusList:
     VALUES = ["IceBox", "Suspend", "Inbox", "Next action", "Not started",
-              "In progress", "Today", "Scheduled", "Done", "Archived", "Trash"]
+              "In progress", "Scheduled", "Done", "Archived", "Trash", "Primary"]
 
-    ALL_VALUES = ["In progress", "Today", "Inbox", "Not started",
-                  "Next action"]
+    ALL_VALUES = ["In progress", "Inbox", "Not started",
+                  "Next action", "Primary"]
 
     @classmethod
     def to_regex(cls) -> str:
