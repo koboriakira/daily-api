@@ -76,11 +76,3 @@ async def append_heading(block_id: str, request: AppendHeadingRequest):
     return {
         "success": True
     }
-
-
-@router.get("/")
-async def get_daily_log(Authorization: Optional[str] = Header(default=None)):
-    """ Notionのデイリーログを取得する """
-    AuthorizeChecker.validate(access_token=Authorization)
-    notion_client = NotionClient()
-    return notion_client.get_daily_log()

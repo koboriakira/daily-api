@@ -28,10 +28,15 @@ class NotionClient:
         # 日付
         date = Date.of("日付", properties["日付"])
 
-        # 一言
-        summary_rich_text = properties["一言"]["rich_text"]
-        summary = summary_rich_text[0]["text"]["content"] if len(
-            summary_rich_text) > 0 else ""
+        # 目標
+        daily_goal_rich_text = properties["目標"]["rich_text"]
+        daily_goal = daily_goal_rich_text[0]["text"]["content"] if len(
+            daily_goal_rich_text) > 0 else ""
+
+        # ふりかえり
+        daily_retro_comment_rich_text = properties["ふりかえり"]["rich_text"]
+        daily_retro_comment = daily_retro_comment_rich_text[0]["text"]["content"] if len(
+            daily_retro_comment_rich_text) > 0 else ""
 
         # レシピ
         recipe_ids = self.__get_relation_ids(properties, "レシピ")
@@ -85,7 +90,8 @@ class NotionClient:
             parent=daily_log["parent"],
             archived=daily_log["archived"],
             date=date,
-            summary=summary,
+            daily_goal=daily_goal,
+            daily_retro_comment=daily_retro_comment,
             recipes=recipes,
             webclips=webclips,
             books=books,
@@ -741,8 +747,8 @@ class NotionClient:
 
     def add_24hours_pages_in_daily_log(self, date: str) -> None:
         """ 直近24時間以内に更新されたページを、当日のデイリーログに追加する"""
-        now = datetime.fromisoformat('2023-08-11')
-        daily_log = self.get_daily_log(now)
+        now = DateObject.fromisoformat('2023-08-11')
+        daily_log_id = self.__find_daily_log(date=now)["id"]
         from_date = now - timedelta(hours=9)
         to_date = now + timedelta(hours=15)
 
@@ -755,7 +761,7 @@ class NotionClient:
         mention_bulleted_list_items = list(
             map(lambda page_id: create_mention_bulleted_list_item(page_id=page_id), page_id_list))
         self.__append_block_children(
-            block_id=daily_log.id,
+            block_id=daily_log_id,
             children=mention_bulleted_list_items
         )
 

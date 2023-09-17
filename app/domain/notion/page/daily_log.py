@@ -17,7 +17,8 @@ from datetime import datetime
 class DailyLog(BasePage):
     date: Date  # 日付
     url: str  # URL
-    summary: str  # 一言
+    daily_goal: str  # 今日の目標
+    daily_retro_comment: str  # 今日のふりかえり
     recipes: list[Recipe]  # レシピ
     webclips: list[Webclip]  # Webクリップ
     books: list[Book]  # 書籍
@@ -35,7 +36,8 @@ class DailyLog(BasePage):
                  archived: bool,
                  date: Date,
                  url: str,
-                 summary: str,
+                 daily_goal: str,
+                 daily_retro_comment: str,
                  recipes: list[str],
                  webclips: list[Webclip],
                  books: list[Book],
@@ -52,7 +54,8 @@ class DailyLog(BasePage):
         self.archived = archived
         self.date = date
         self.url = url
-        self.summary = summary
+        self.daily_goal = daily_goal
+        self.daily_retro_comment = daily_retro_comment
         self.recipes = recipes
         self.webclips = webclips
         self.books = books
