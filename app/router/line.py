@@ -17,11 +17,6 @@ def message_push(text: Text):
     return line_client.push_message(text.content)
 
 
-@router.post("/message", response_model=dict)
-def message_push(text: Text):
-    return line_client.push_message(text.content)
-
-
 class Action(BaseModel):
     label: str
     text: str
