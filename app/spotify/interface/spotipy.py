@@ -1,9 +1,5 @@
-from app.model.spotify.track import TrackConverter
-from app.model.spotify.track import RecentlyPlayedTrack
-from app.domain.spotify.item import Items
-from app.domain.spotify.track import Track
 from app.spotify.interface.track_translator import TrackTranslator
-from app.domain.spotify.album import Album
+from app.domain.spotify.track import Track
 from app.util.cache import Cache
 from app.util.global_ip_address import GlobalIpAddress
 from app.util.get_logger import get_logger
@@ -36,7 +32,7 @@ class Spotipy:
         sp = spotipy.Spotify(auth=access_token)
         return cls(sp)
 
-    def current_user_recently_played(self) -> list[RecentlyPlayedTrack]:
+    def current_user_recently_played(self) -> list:
         raise NotImplementedError()
 
     def get_track(self, track_id: str) -> Optional[Track]:
@@ -53,7 +49,7 @@ class Spotipy:
         logger.debug(playing_track)
         return TrackTranslator.from_entity(playing_track["item"])
 
-    def get_album(self, album_id: str) -> Album:
+    def get_album(self, album_id: str):
         raise NotImplementedError()
 
     @classmethod

@@ -1,7 +1,5 @@
 import os
 from notion_client import Client
-from app.domain.spotify.track import Track
-from app.domain.spotify.album import Album
 from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, Select, Checkbox
 from app.domain.notion import Cover, NotionDatetime, TimeKind
 from app.domain.notion.database.database_type import DatabaseType
@@ -166,42 +164,6 @@ class NotionClient:
         )
 
         print(result)
-        return result
-
-    def add_album(self, album: Album, daily_log_id: str) -> dict:
-        """ 指定されたアルバムを音楽データベースに追加する """
-        # すでに存在するか確認
-        data = self.__query_with_title_filter(
-            database_type=DatabaseType.MUSIC,
-            title=album.name)
-        if data is not None:
-            return data
-
-        # タグを作成
-        tag_page_ids = []
-        for artist in album.artists:
-            page_id = self.add_tag(name=artist["name"])
-            tag_page_ids.append(page_id)
-        for genre in album.genres:
-            page_id = self.add_tag(name=genre["name"])
-            tag_page_ids.append(page_id)
-
-        # 新しいページを作成
-        artist_name = ",".join(list(map(lambda a: a["name"], album.artists)))
-        result = self.__create_page_in_database(
-            database_type=DatabaseType.MUSIC,
-            cover=Cover.from_external_url(album.images[0]["url"]),
-            properties=[
-                Title.from_plain_text(name="名前", text=album.name),
-                Text.from_plain_text(name="Artist", text=artist_name),
-                Relation.from_id_list(name="タグ", id_list=tag_page_ids),
-                Relation.from_id(name="デイリーログ", id=daily_log_id),
-                Url.from_url(name="Spotify",
-                             url=album.external_urls["spotify"])
-            ]
-        )
-
-        # URLを返す
         return result
 
     def add_tag(self, name: str) -> str:

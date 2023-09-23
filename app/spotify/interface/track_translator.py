@@ -1,4 +1,4 @@
-from app.domain.spotify.item import Track
+from app.domain.spotify.track import Track
 
 
 class TrackTranslator:

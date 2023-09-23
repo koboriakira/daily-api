@@ -1,13 +1,10 @@
+from fastapi import FastAPI
 from app.router import healthcheck
 from app.router.spotify import access_token, track, current_user_recently_played
 from app.router.notion import daily_log, block, zettlekasten, project, recipe, music, prowrestling, book, webclip, comment, weekly_log, pdca
 from app.router import line
 from app.router import gas
 from app.router import slack
-from fastapi import FastAPI
-from fastapi import FastAPI, Request
-from app.controller.spotify_controller import SpotifyController
-from app.interface.notion_client import NotionClient
 
 app = FastAPI()
 
