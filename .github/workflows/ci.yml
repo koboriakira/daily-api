@@ -4,7 +4,9 @@ name: CI
 
 on:
   workflow_dispatch:
-
+  push:
+    branches:
+      - develop
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -20,7 +22,10 @@ jobs:
         with:
           python-version: 3.11
 
-      - name: pytest
+      - name: pip install
         run: |
           pip install -r requirements.txt
+
+      - name: pytest
+        run: |
           pytest -v
