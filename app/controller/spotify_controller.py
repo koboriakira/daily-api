@@ -47,7 +47,8 @@ class SpotifyController:
             token_info = self.__read_access_token_info()
             sp = spotipy.Spotify(auth=token_info['access_token'])
             track_entity = sp.track(track_id=track_id)
-            print(track_entity)
+            import json
+            print(json.dumps(track_entity))
             track = Track.from_dict(track_entity)
             return track
         except Exception as e:

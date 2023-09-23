@@ -1,7 +1,6 @@
 from app.model.spotify.track import RecentlyPlayedTrack
 from app.controller.spotify_controller import SpotifyController
 from fastapi import APIRouter
-from typing import Optional
 router = APIRouter()
 
 

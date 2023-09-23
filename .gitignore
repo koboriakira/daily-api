@@ -5,3 +5,4 @@ __pycache__
 .cache
 sample_get_recently_played.json
 sample_json
+*.log
