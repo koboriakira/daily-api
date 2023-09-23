@@ -9,6 +9,7 @@ class Track(BaseModel):
     artists: list[str] = Field(description="Name of the artist")
     spotify_url: str = Field(description="Spotify URL of the track")
     cover_url: str = Field(description="Cover URL of the track")
+    release_date: str = Field(description="Release date of the track")
 
     def __hash__(self):
         return hash(self.id)
@@ -29,7 +30,8 @@ class TrackConverter:
             name=track.name,
             artists=[artist["name"] for artist in track.artists],
             spotify_url=track.spotify_url,
-            cover_url=track.album["images"][0]["url"]
+            cover_url=track.album["images"][0]["url"],
+            release_date=track.album["release_date"]
         )
 
 
