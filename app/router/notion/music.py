@@ -40,6 +40,7 @@ class PostMusicRequest(BaseModel):
                              regex=r"^https://open.spotify.com/.*")
     cover_url: str = Field(..., title="カバー画像のURL",
                            regex=r"^https://i.scdn.co/image/.*")
+    release_date: Optional[DateObject] = Field(..., title="リリース日")
 
 
 @ router.post("/", response_model=dict)
@@ -52,6 +53,7 @@ async def post_music(request: PostMusicRequest):
                                      artists=request.artists,
                                      spotify_url=request.spotify_url,
                                      cover_url=request.cover_url,
+                                     release_date=request.release_date,
                                      daily_log_id=daily_log_id)
     return {
         "page_id": result["id"],
