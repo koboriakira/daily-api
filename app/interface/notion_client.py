@@ -429,8 +429,8 @@ class NotionClient:
                 kind=TimeKind.CREATED_TIME, block=recipe)
             daily_log_id = self.__get_relation_ids(
                 properties=properties, key="デイリーログ")
-            select = Select.of(
-                name="状態", param=properties["状態"]) if "状態" in properties else None
+            print(properties["状態"])
+            select = Select.of(name="状態", param=properties["状態"])
 
             recipes.append({
                 "id": recipe["id"],

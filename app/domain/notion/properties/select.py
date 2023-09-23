@@ -23,8 +23,10 @@ class Select(Property):
         self.id = id
 
     @ staticmethod
-    def of(name: str, param: dict) -> "Select":
+    def of(name: str, param: dict) -> Optional["Select"]:
         select = param["select"]
+        if select is None:
+            return None
         return Select(
             name=name,
             selected_id=select["id"],
