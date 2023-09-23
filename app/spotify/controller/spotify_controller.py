@@ -22,3 +22,11 @@ class SpotifyController:
         if track is None:
             return None
         return TrackResponseTranslator.to_entity(track)
+
+    @staticmethod
+    def get_auth_url() -> str:
+        return Spotipy.get_auth_url()
+
+    @staticmethod
+    def authorize(code: str) -> dict:
+        return Spotipy.authorize(code=code)

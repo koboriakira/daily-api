@@ -65,6 +65,13 @@ class Spotipy:
         return auth_url
 
     @classmethod
+    def authorize(cls, code: str):
+        sp_oauth = cls.__get_spotify_oauth()
+        token_info = sp_oauth.get_access_token(code)
+        cls.__write_access_token_info(token_info)
+        return token_info
+
+    @classmethod
     def __get_access_token_from_refresh_token(cls) -> str:
         token_info = cls.__read_access_token_info()
         sp_oauth = cls.__get_spotify_oauth()
