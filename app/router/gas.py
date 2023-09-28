@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from app.line.line_client import LineClientFactory
 from datetime import date as DateObject
 from datetime import datetime as DateTimeObject
+from datetime import time as TimeObject
 from datetime import timedelta
 import requests
 import os
@@ -9,7 +10,10 @@ import json
 import yaml
 from pydantic import BaseModel
 from typing import Optional
+from app.util.get_logger import get_logger
 import re
+
+logger = get_logger(__name__)
 
 GAS_DEPLOY_ID = os.environ.get("GAS_DEPLOY_ID")
 GAS_CALENDAR_API_URI = f"https://script.google.com/macros/s/{GAS_DEPLOY_ID}/exec"
@@ -74,7 +78,6 @@ class PostCalendarRequest(BaseModel):
 
 @ router.post("/calendar/")
 def post_calendar(request: PostCalendarRequest):
-    url = f"{GAS_CALENDAR_API_URI}"
     data = {
         "category": request.category,
         "startTime": request.start.isoformat(),
@@ -82,5 +85,25 @@ def post_calendar(request: PostCalendarRequest):
         "title": request.title,
         "description": request.detail,
     }
-    response = requests.post(url, json=data)
+    response = requests.post(GAS_CALENDAR_API_URI, json=data)
+    return response.text
+
+
+@router.delete("/calendar/")
+def delete_calendar(date: DateObject, category: str, title: str):
+    start_datetime = DateTimeObject.combine(
+        date, TimeObject(0, 0))
+    end_datetime = DateTimeObject.combine(
+        date, TimeObject(23, 59))
+
+    data = {
+        "mode": "delete",
+        "title": title,
+        "startTime": start_datetime.strftime("%Y-%m-%dT%H:%M:%S+09:00"),
+        "endTime": end_datetime.strftime("%Y-%m-%dT%H:%M:%S+09:00"),
+        "category": category
+    }
+    logger.debug(json.dumps(data, ensure_ascii=False))
+    logger.debug(GAS_CALENDAR_API_URI, data)
+    response = requests.post(GAS_CALENDAR_API_URI, json=data)
     return response.text
