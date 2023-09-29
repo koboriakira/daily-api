@@ -15,13 +15,26 @@ class NotionClient:
     def __init__(self):
         self.client = Client(auth=os.getenv("NOTION_API_TOKEN"))
 
-    def get_daily_log(self, date: Optional[DateObject] = None) -> DailyLog:
+    def get_daily_log(self, date: Optional[DateObject] = None, detail: bool = False) -> DailyLog:
+        """
+        指定された日付のデイリーログを取得する
+        date: 指定されない場合は今日の日付
+        detail: Trueの場合はレシピ、Webクリップ、書籍、プロレス観戦記録、音楽、Zettlekasten、外食、おでかけ、あらたも取得する
+        """
         target_date = DateObject.today() if date is None else date
         daily_log = self.__find_daily_log(target_date)
-        print(daily_log)
         if daily_log is None:
             raise Exception("Not found")
         properties = daily_log["properties"]
+
+        daily_log_id = daily_log["id"]
+        url = daily_log["url"]
+        created_time = NotionDatetime.from_page_block(
+            kind=TimeKind.CREATED_TIME, block=daily_log)
+        last_edited_time = NotionDatetime.from_page_block(
+            kind=TimeKind.LAST_EDITED_TIME, block=daily_log)
+        parent = daily_log["parent"]
+        archived = daily_log["archived"]
 
         # 日付
         date = Date.of("日付", properties["日付"])
@@ -35,6 +48,28 @@ class NotionClient:
         daily_retro_comment_rich_text = properties["ふりかえり"]["rich_text"]
         daily_retro_comment = daily_retro_comment_rich_text[0]["text"]["content"] if len(
             daily_retro_comment_rich_text) > 0 else ""
+
+        if not detail:
+            return DailyLog(
+                id=daily_log_id,
+                url=url,
+                created_time=created_time.value,
+                last_edited_time=last_edited_time.value,
+                parent=parent,
+                archived=archived,
+                date=date,
+                daily_goal=daily_goal,
+                daily_retro_comment=daily_retro_comment,
+                recipes=[],
+                webclips=[],
+                books=[],
+                prowrestling_watches=[],
+                musics=[],
+                zettlekasten=[],
+                restaurants=[],
+                go_outs=[],
+                aratas=[]
+            )
 
         # レシピ
         recipe_ids = self.__get_relation_ids(properties, "レシピ")
