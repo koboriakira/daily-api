@@ -15,6 +15,7 @@ from datetime import datetime
 
 @dataclass
 class DailyLog(BasePage):
+    id: str  # ID
     date: Date  # 日付
     url: str  # URL
     daily_goal: str  # 今日の目標
