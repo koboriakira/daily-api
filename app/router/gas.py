@@ -21,9 +21,11 @@ GAS_CALENDAR_API_URI = f"https://script.google.com/macros/s/{GAS_DEPLOY_ID}/exec
 router = APIRouter()
 line_client = LineClientFactory.get_instance()
 
+CATEGORY_ACHIVEMENT = "実績"
+
 
 @router.get("/calendar/", response_model=list[dict])
-def get_calendar(start_date: DateObject, end_date: DateObject):
+def get_calendar(start_date: DateObject, end_date: DateObject, achievement: Optional[bool] = False):
 
     # UTC+00:00で検索してしまうため、ちょっと広めに検索して、あとで絞る
     replaced_start_date = start_date - timedelta(days=1)
@@ -38,10 +40,23 @@ def get_calendar(start_date: DateObject, end_date: DateObject):
 
     def convert(data: list[dict], start_date: DateTimeObject, end_date: DateTimeObject):
         for schedule in data:
+            # 「予定」をとるのか「実績」をとるのかを判別する
+            if achievement:
+                if schedule["category"] != CATEGORY_ACHIVEMENT:
+                    continue
+            else:
+                if schedule["category"] == CATEGORY_ACHIVEMENT:
+                    continue
+
+            # 日時のバリデーション
             start = DateTimeObject.fromisoformat(
                 schedule["start"]) + timedelta(hours=9)
             end = DateTimeObject.fromisoformat(
                 schedule["end"]) + timedelta(hours=9)
+            if not (start_date.timestamp() <= start.timestamp() and end.timestamp() <= end_date.timestamp()):
+                continue
+
+            # 詳細をうまくパースする
             description = schedule["description"] if "description" in schedule else ""
             try:
                 # <br>タグは改行に置換する
@@ -53,19 +68,20 @@ def get_calendar(start_date: DateObject, end_date: DateObject):
                 print("yaml parse error")
                 print(description)
                 description = None
-            if start_date.timestamp() <= start.timestamp() and end.timestamp() <= end_date.timestamp():
-                yield {
-                    "category": schedule["category"],
-                    "start": start.strftime("%Y-%m-%d %H:%M:%S+09:00"),
-                    "end": end.strftime("%Y-%m-%d %H:%M:%S+09:00"),
-                    "title": schedule["title"],
-                    "detail": description,
-                }
 
+            yield {
+                "category": schedule["category"],
+                "start": start.strftime("%Y-%m-%d %H:%M:%S+09:00"),
+                "end": end.strftime("%Y-%m-%d %H:%M:%S+09:00"),
+                "title": schedule["title"],
+                "detail": description,
+            }
+
+    start_date = DateTimeObject.combine(start_date, TimeObject(0, 0, 0))
+    end_date = DateTimeObject.combine(end_date, TimeObject(23, 59, 59))
     return list(convert(data,
-                        DateTimeObject(start_date.year,
-                                       start_date.month, start_date.day),
-                        DateTimeObject(end_date.year, end_date.month, end_date.day, 23, 59, 59)))
+                        start_date,
+                        end_date))
 
 
 class PostCalendarRequest(BaseModel):
@@ -89,7 +105,7 @@ def post_calendar(request: PostCalendarRequest):
     return response.text
 
 
-@router.delete("/calendar/")
+@ router.delete("/calendar/")
 def delete_calendar(date: DateObject, category: str, title: str):
     start_datetime = DateTimeObject.combine(
         date, TimeObject(0, 0))
