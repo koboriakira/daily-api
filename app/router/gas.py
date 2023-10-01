@@ -62,10 +62,11 @@ def get_calendar(start_date: DateObject, end_date: DateObject):
                     "detail": description,
                 }
 
+    start_date = DateTimeObject.combine(start_date, TimeObject(0, 0, 0))
+    end_date = DateTimeObject.combine(end_date, TimeObject(23, 59, 59))
     return list(convert(data,
-                        DateTimeObject(start_date.year,
-                                       start_date.month, start_date.day),
-                        DateTimeObject(end_date.year, end_date.month, end_date.day, 23, 59, 59)))
+                        start_date,
+                        end_date))
 
 
 class PostCalendarRequest(BaseModel):
@@ -89,7 +90,7 @@ def post_calendar(request: PostCalendarRequest):
     return response.text
 
 
-@router.delete("/calendar/")
+@ router.delete("/calendar/")
 def delete_calendar(date: DateObject, category: str, title: str):
     start_datetime = DateTimeObject.combine(
         date, TimeObject(0, 0))
