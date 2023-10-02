@@ -247,6 +247,28 @@ class NotionClient:
                                     remind_date=daily_date,
                                     )
 
+    def create_monthly_log(self, year: int, month: int) -> None:
+        """ マンスリーログを作成する """
+        monthly_log_entity = self.find_monthly_log(year, month)
+        if monthly_log_entity is None:
+            monthly_log_entity = self.__create_monthly_log_page(year, month)
+
+    def find_monthly_log(self, year: int, month: int) -> dict:
+        """ 指定された年と月のマンスリーログを取得する """
+        data = self.__query_with_title_filter(
+            database_type=DatabaseType.MONTHLY_LOG,
+            title=f"{year}-{month:02}"
+        )
+        return data
+
+    def __create_monthly_log_page(self, year: int, month: int) -> dict:
+        """ 指定された年と月のマンスリーログを作成する """
+        title = Title.from_plain_text(name="名前", text=f"{year}-{month:02}")
+        return self.__create_page_in_database(
+            database_type=DatabaseType.MONTHLY_LOG,
+            properties=[title]
+        )
+
     def set_today_to_inprogress(self) -> None:
         """
         「プロジェクト」データベースの"Today"ステータスを"In progress"にする。
@@ -799,7 +821,7 @@ class NotionClient:
             yield page
 
     def test(self):
-        data = self.__retrieve_page(page_id="fef84ea45b7d494c843fb426eb5606ac")
+        data = self.create_monthly_log(year=2023, month=10)
         print(data)
         pass
 
