@@ -40,14 +40,11 @@ class NotionClient:
         date = Date.of("日付", properties["日付"])
 
         # 目標
-        daily_goal_rich_text = properties["目標"]["rich_text"]
-        daily_goal = daily_goal_rich_text[0]["text"]["content"] if len(
-            daily_goal_rich_text) > 0 else ""
+        daily_goal = Text.from_dict(name="目標", param=properties["目標"])
 
         # ふりかえり
-        daily_retro_comment_rich_text = properties["ふりかえり"]["rich_text"]
-        daily_retro_comment = daily_retro_comment_rich_text[0]["text"]["content"] if len(
-            daily_retro_comment_rich_text) > 0 else ""
+        daily_retro_comment = Text.from_dict(
+            name="ふりかえり", param=properties["ふりかえり"])
 
         if not detail:
             return DailyLog(
@@ -58,8 +55,8 @@ class NotionClient:
                 parent=parent,
                 archived=archived,
                 date=date,
-                daily_goal=daily_goal,
-                daily_retro_comment=daily_retro_comment,
+                daily_goal=daily_goal.text,
+                daily_retro_comment=daily_retro_comment.text,
                 recipes=[],
                 webclips=[],
                 books=[],
