@@ -198,6 +198,20 @@ class NotionClient:
         print(result)
         return result
 
+    def update_daily_log(self, date: DateObject, daily_goal: Optional[str] = None, daily_retro_comment: Optional[str] = None) -> None:
+        daily_log_id = self.get_daily_log_id(date)
+
+        properties = []
+        if daily_goal is not None:
+            properties.append(Text.from_plain_text(
+                name="目標", text=daily_goal))
+        if daily_retro_comment is not None:
+            properties.append(Text.from_plain_text(
+                name="ふりかえり", text=daily_retro_comment))
+
+        self.__update_page(page_id=daily_log_id,
+                           properties=properties)
+
     def add_tag(self, name: str) -> str:
         """ 指定されたタグをタグデータベースに追加する """
         # すでに存在するか確認
@@ -818,9 +832,7 @@ class NotionClient:
             yield page
 
     def test(self):
-        data = self.create_monthly_log(year=2023, month=10)
-        print(data)
-        pass
+        self.update_daily_log(date=DateObject.today(), daily_goal="test")
 
 
 def valid_datetime(target: datetime, from_date: datetime, to_date: datetime) -> bool:
