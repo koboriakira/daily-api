@@ -1,37 +1,27 @@
-from fastapi import Header
 from fastapi import APIRouter
 from pydantic import BaseModel
-from typing import Optional, Union
+from typing import Optional
 from app.interface.notion_client import NotionClient
-from app.domain.notion.block.rich_text import RichTextBuilder
-from app.domain.notion.block import Paragraph
 from datetime import date as DateObject
+from app.router.response.api_response import ApiResponse, success
 
 router = APIRouter()
 
 
-class Text(BaseModel):
-    content: Union[list[str], str]
+class DailyLogRequest(BaseModel):
+    daily_goal: Optional[str]
+    daily_retro_comment: Optional[str]
 
 
-@router.post("/", response_model=bool)
-async def add_text_daily_log(text: Text):
-    """ 指定されたテキストをNotionのデイリーログに追加する """
+@router.post("/{date}/", response_model=ApiResponse)
+async def post_daily_log(date: DateObject, request: DailyLogRequest):
+    """ デイリーログを更新する """
+    print(request)
     notion_client = NotionClient()
-
-    # テキスト
-    if isinstance(text.content, str):
-        rich_text = RichTextBuilder.get_instance().add_text(text.content).build()
-        paragraph = Paragraph.from_rich_text(rich_text=rich_text)
-        notion_client.add_daily_log(block=paragraph)
-        return True
-
-    # リスト
-    for text_content in text.content:
-        rich_text = RichTextBuilder.get_instance().add_text(text_content).build()
-        paragraph = Paragraph.from_rich_text(rich_text=rich_text)
-        notion_client.add_daily_log(block=paragraph)
-    return True
+    notion_client.update_daily_log(date=date,
+                                   daily_goal=request.daily_goal,
+                                   daily_retro_comment=request.daily_retro_comment)
+    return success(data=None)
 
 
 @router.get("/")

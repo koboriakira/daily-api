@@ -40,14 +40,11 @@ class NotionClient:
         date = Date.of("日付", properties["日付"])
 
         # 目標
-        daily_goal_rich_text = properties["目標"]["rich_text"]
-        daily_goal = daily_goal_rich_text[0]["text"]["content"] if len(
-            daily_goal_rich_text) > 0 else ""
+        daily_goal = Text.from_dict(name="目標", param=properties["目標"])
 
         # ふりかえり
-        daily_retro_comment_rich_text = properties["ふりかえり"]["rich_text"]
-        daily_retro_comment = daily_retro_comment_rich_text[0]["text"]["content"] if len(
-            daily_retro_comment_rich_text) > 0 else ""
+        daily_retro_comment = Text.from_dict(
+            name="ふりかえり", param=properties["ふりかえり"])
 
         if not detail:
             return DailyLog(
@@ -58,8 +55,8 @@ class NotionClient:
                 parent=parent,
                 archived=archived,
                 date=date,
-                daily_goal=daily_goal,
-                daily_retro_comment=daily_retro_comment,
+                daily_goal=daily_goal.text,
+                daily_retro_comment=daily_retro_comment.text,
                 recipes=[],
                 webclips=[],
                 books=[],
@@ -201,6 +198,20 @@ class NotionClient:
         print(result)
         return result
 
+    def update_daily_log(self, date: DateObject, daily_goal: Optional[str] = None, daily_retro_comment: Optional[str] = None) -> None:
+        daily_log_id = self.get_daily_log_id(date)
+
+        properties = []
+        if daily_goal is not None:
+            properties.append(Text.from_plain_text(
+                name="目標", text=daily_goal))
+        if daily_retro_comment is not None:
+            properties.append(Text.from_plain_text(
+                name="ふりかえり", text=daily_retro_comment))
+
+        self.__update_page(page_id=daily_log_id,
+                           properties=properties)
+
     def add_tag(self, name: str) -> str:
         """ 指定されたタグをタグデータベースに追加する """
         # すでに存在するか確認
@@ -246,6 +257,28 @@ class NotionClient:
                                     end_date=daily_date + timedelta(days=1),
                                     remind_date=daily_date,
                                     )
+
+    def create_monthly_log(self, year: int, month: int) -> None:
+        """ マンスリーログを作成する """
+        monthly_log_entity = self.find_monthly_log(year, month)
+        if monthly_log_entity is None:
+            monthly_log_entity = self.__create_monthly_log_page(year, month)
+
+    def find_monthly_log(self, year: int, month: int) -> dict:
+        """ 指定された年と月のマンスリーログを取得する """
+        data = self.__query_with_title_filter(
+            database_type=DatabaseType.MONTHLY_LOG,
+            title=f"{year}-{month:02}"
+        )
+        return data
+
+    def __create_monthly_log_page(self, year: int, month: int) -> dict:
+        """ 指定された年と月のマンスリーログを作成する """
+        title = Title.from_plain_text(name="名前", text=f"{year}-{month:02}")
+        return self.__create_page_in_database(
+            database_type=DatabaseType.MONTHLY_LOG,
+            properties=[title]
+        )
 
     def set_today_to_inprogress(self) -> None:
         """
@@ -799,9 +832,7 @@ class NotionClient:
             yield page
 
     def test(self):
-        data = self.__retrieve_page(page_id="fef84ea45b7d494c843fb426eb5606ac")
-        print(data)
-        pass
+        self.update_daily_log(date=DateObject.today(), daily_goal="test")
 
 
 def valid_datetime(target: datetime, from_date: datetime, to_date: datetime) -> bool:
