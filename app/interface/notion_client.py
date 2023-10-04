@@ -321,71 +321,81 @@ class NotionClient:
         searched_projects = self.__query(
             database_type=DatabaseType.PROJECT)["results"]
         projects = []
-        for project in searched_projects:
-            properties = project["properties"]
-            # 目標
-            goal_id_list = self.__get_relation_ids(
-                properties=properties, key="目標")
-            if goal_id is not None and goal_id not in goal_id_list:
+        for searched_project in searched_projects:
+            project = self._convert_project(searched_project)
+            # バリデーション: 目標
+            if goal_id is not None and goal_id not in project["goal_id_list"]:
                 continue
-            # 今週やる
-            is_thisweek = Checkbox.of(name="今週やる", param=properties["今週やる"])
-            if filter_thisweek and not is_thisweek.checked:
+            # バリデーション: 今週やる
+            if filter_thisweek and not project["is_thisweek"]:
                 continue
-            # ステータス
-            status = Status.of(name="ステータス", param=properties["ステータス"])
-            daily_log_id = self.__get_relation_ids(
-                properties=properties, key="デイリーログ")
-            if len(status_name_list) > 0 and status.status_name not in status_name_list:
+            # バリデーション: ステータス
+            if len(status_name_list) > 0 and project["status"] not in status_name_list:
                 continue
-            # リマインド日
+            # バリデーション: リマインド日
             if remind_date is not None:
-                project_remind_date = Date.of(
-                    name="リマインド", param=properties["リマインド"])
-                if project_remind_date.start != remind_date.isoformat():
+                if project["remind_date"] != remind_date.isoformat():
                     continue
-            title = Title.from_properties(properties)
-            last_edited_time = NotionDatetime.from_page_block(
-                kind=TimeKind.LAST_EDITED_TIME, block=project)
-            created_time = NotionDatetime.from_page_block(
-                kind=TimeKind.CREATED_TIME, block=project)
-            projects.append({
-                "id": project["id"],
-                "url": project["url"],
-                "daily_log_id": daily_log_id,
-                "goal_id_list": goal_id_list,
-                "status": status.status_name,
-                "title": title.text,
-                "is_thisweek": is_thisweek.checked,
-                "created_at": created_time.value,
-                "updated_at": last_edited_time.value,
-            })
 
-        if not get_detail:
-            return projects
-
-        # ヒットしたプロジェクトのタスクを取得する
-        for project in projects:
-            children = self.__get_block_children(page_id=project["id"])
-            project["tasks"] = []
-            for child in children:
-                if isinstance(child, ChildDatabase):
-                    database_id = child.id
-                    response = self.__query(database_type=database_id)
-                    for task in response["results"]:
-                        task_title = Title.from_properties(task["properties"])
-                        task_status = Status.of(
-                            name="ステータス", param=task["properties"]["ステータス"])
-                        task_date = Date.of(
-                            name="予定日", param=task["properties"]["予定日"])
-                        project["tasks"].append({
-                            "id": task["id"],
-                            "title": task_title.text,
-                            "status": task_status.status_name,
-                            "implementation_date": task_date.start
-                        })
+            # プロジェクトの詳細を取得する設定がある場合はタスクを取得する
+            if get_detail:
+                project["tasks"] = self._find_tasks(project_id=project["id"])
+            projects.append(project)
 
         return projects
+
+    def _find_tasks(self, project_id: str) -> list[dict]:
+        children = self.__get_block_children(page_id=project_id)
+        tasks = []
+        for child in children:
+            if isinstance(child, ChildDatabase):
+                database_id = child.id
+                response = self.__query(database_type=database_id)
+                for task in response["results"]:
+                    task_title = Title.from_properties(task["properties"])
+                    task_status = Status.of(
+                        name="ステータス", param=task["properties"]["ステータス"])
+                    task_date = Date.of(
+                        name="予定日", param=task["properties"]["予定日"])
+                    tasks.append({
+                        "id": task["id"],
+                        "title": task_title.text,
+                        "status": task_status.status_name,
+                        "implementation_date": task_date.start
+                    })
+        return tasks
+
+    def _convert_project(self, project: dict) -> dict:
+        properties = project["properties"]
+        # 目標
+        goal_id_list = self.__get_relation_ids(
+            properties=properties, key="目標")
+        # 今週やる
+        is_thisweek = Checkbox.of(name="今週やる", param=properties["今週やる"])
+        # ステータス
+        status = Status.of(name="ステータス", param=properties["ステータス"])
+        daily_log_id = self.__get_relation_ids(
+            properties=properties, key="デイリーログ")
+        # リマインド日
+        project_remind_date = Date.of(
+            name="リマインド", param=properties["リマインド"])
+        title = Title.from_properties(properties)
+        last_edited_time = NotionDatetime.from_page_block(
+            kind=TimeKind.LAST_EDITED_TIME, block=project)
+        created_time = NotionDatetime.from_page_block(
+            kind=TimeKind.CREATED_TIME, block=project)
+        return {
+            "id": project["id"],
+            "url": project["url"],
+            "daily_log_id": daily_log_id,
+            "goal_id_list": goal_id_list,
+            "status": status.status_name,
+            "title": title.text,
+            "remind_date": project_remind_date.start,
+            "is_thisweek": is_thisweek.checked,
+            "created_at": created_time.value,
+            "updated_at": last_edited_time.value,
+        }
 
     def create_project(self,
                        title: str,
@@ -417,6 +427,14 @@ class NotionClient:
             database_type=DatabaseType.PROJECT,
             properties=properties
         )
+
+    def find_project_by_id(self,
+                           project_block_id: str) -> dict:
+        """ 指定されたプロジェクトを取得する """
+        project_page = self.__retrieve_page(page_id=project_block_id)
+        project = self._convert_project(project_page)
+        project["tasks"] = self._find_tasks(project_id=project["id"])
+        return project
 
     def update_project(self,
                        project_block_id: str,
