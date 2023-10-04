@@ -73,6 +73,17 @@ class UpdateProjectRequest(BaseModel):
                                   regex=ProjectStatusList.to_regex())
 
 
+@router.get("/{project_id}", response_model=Project)
+async def get_projects(project_id: str):
+    """ Notionのプロジェクトを取得する """
+    notion_client = NotionClient()
+
+    project_entity = notion_client.find_project_by_id(
+        project_block_id=project_id)
+    print(project_entity)
+    return Project(**project_entity)
+
+
 @ router.post("/{project_id}")
 def update_project(project_id: str, request: UpdateProjectRequest):
     """ Notionのプロジェクトを更新する """
