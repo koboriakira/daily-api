@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from typing import Optional
 from app.spotify.controller.spotify_controller import SpotifyController
 from app.spotify.controller.track_response import TrackResponse
@@ -25,9 +25,13 @@ async def get_track(track_id: str):
 
 
 @router.get("/current/playing", response_model=Optional[TrackResponse])
-async def get_playing():
+async def get_current_playing():
     """
     現在流れている曲を取得する
     """
-    new_spotify_controller = SpotifyController()
+    try:
+        new_spotify_controller = SpotifyController()
+    except FileNotFoundError as e:
+        print(e)
+        raise HTTPException(status_code=401, detail="Spotifyの認証が必要です。")
     return new_spotify_controller.get_playing()
