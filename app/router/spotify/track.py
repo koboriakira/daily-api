@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import Optional
 from app.spotify.controller.spotify_controller import SpotifyController
 from app.spotify.controller.track_response import TrackResponse
-
+from spotipy.exceptions import SpotifyException
 router = APIRouter()
 
 
@@ -31,6 +31,8 @@ async def get_current_playing():
     """
     try:
         new_spotify_controller = SpotifyController()
+    except SpotifyException as e:
+        return HTTPException(status_code=401, detail="Spotifyのアクセストークンが有効切れです。")
     except FileNotFoundError as e:
         print(e)
         raise HTTPException(status_code=401, detail="Spotifyの認証が必要です。")
