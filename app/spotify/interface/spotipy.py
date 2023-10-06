@@ -21,12 +21,12 @@ class Spotipy:
         self.sp = sp
 
     @classmethod
-    def get_instance(cls, access_token: Optional[str] = None) -> 'Spotipy':
-        token_info = cls.__read_access_token_info()
-        if token_info is not None and 'access_token' in token_info:
-            # アクセストークンが指定されていれば使う
-            sp = spotipy.Spotify(auth=token_info['access_token'])
-            return cls(sp)
+    def get_instance(cls) -> 'Spotipy':
+        # token_info = cls.__read_access_token_info()
+        # if token_info is not None and 'access_token' in token_info:
+        #     # アクセストークンが指定されていれば使う
+        #     sp = spotipy.Spotify(auth=token_info['access_token'])
+        #     return cls(sp)
         # なければリフレッシュトークン経由で取得する
         access_token = cls.__get_access_token_from_refresh_token()
         sp = spotipy.Spotify(auth=access_token)
