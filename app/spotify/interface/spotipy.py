@@ -77,6 +77,7 @@ class Spotipy:
 
     @classmethod
     def __write_access_token_info(self, access_token_info: dict) -> None:
+        logger.info(access_token_info)
         Cache.write('spotify_access_token_info', access_token_info)
 
     @classmethod
@@ -95,7 +96,7 @@ class Spotipy:
         """ 認証のコールバック用URLを取得 """
         # NOTE: 返却値が変わる場合は、Spotifyのアプリ設定画面のRedirect URIsも変更する必要がある
         path = "spotify/access_token/callback"
-        if os.getenv('ENVIRONMENT') == "development":
+        if os.getenv('ENVIRONMENT') == "dev":
             return f"http://localhost:5023/{path}"
         else:
             return f"http://{GlobalIpAddress.get()}/{path}"
