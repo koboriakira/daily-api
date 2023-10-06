@@ -7,6 +7,8 @@ import os
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from typing import Optional
+from datetime import datetime as DatetimeObject
+from datetime import timedelta
 
 logger = get_logger(__name__)
 
@@ -22,15 +24,21 @@ class Spotipy:
 
     @classmethod
     def get_instance(cls) -> 'Spotipy':
-        # token_info = cls.__read_access_token_info()
-        # if token_info is not None and 'access_token' in token_info:
-        #     # アクセストークンが指定されていれば使う
-        #     sp = spotipy.Spotify(auth=token_info['access_token'])
-        #     return cls(sp)
-        # なければリフレッシュトークン経由で取得する
-        access_token = cls.__get_access_token_from_refresh_token()
-        sp = spotipy.Spotify(auth=access_token)
-        return cls(sp)
+        token_info = cls.__read_access_token_info()
+        if token_info is None:
+            raise Exception("Spotifyの認証が必要です。")
+        now = DatetimeObject.now()
+        expired_datetime = DatetimeObject.fromisoformat(
+            token_info['expired_datetime'])
+        if now.timestamp() < expired_datetime.timestamp():
+            # 期限内の場合
+            sp = spotipy.Spotify(auth=token_info['access_token'])
+            return cls(sp)
+        else:
+            # 期限切れの場合
+            access_token = cls.__get_access_token_from_refresh_token()
+            sp = spotipy.Spotify(auth=access_token)
+            return cls(sp)
 
     def current_user_recently_played(self) -> list:
         raise NotImplementedError()
@@ -77,8 +85,11 @@ class Spotipy:
 
     @classmethod
     def __write_access_token_info(self, access_token_info: dict) -> None:
-        logger.info(access_token_info)
-        Cache.write('spotify_access_token_info', access_token_info)
+        one_hour_after = DatetimeObject.now() + timedelta(hours=1)
+        info = {**access_token_info,
+                "expired_datetime": one_hour_after.isoformat()}
+        logger.info(info)
+        Cache.write('spotify_access_token_info', info)
 
     @classmethod
     def __read_access_token_info(self) -> None:
