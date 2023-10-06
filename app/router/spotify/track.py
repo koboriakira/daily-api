@@ -32,7 +32,10 @@ async def get_current_playing():
     try:
         new_spotify_controller = SpotifyController()
     except SpotifyException as e:
-        return HTTPException(status_code=401, detail="Spotifyのアクセストークンが有効切れです。")
+        print(e)
+        if "access token expired" in str(e):
+            return HTTPException(status_code=401, detail="Spotifyのアクセストークンが有効切れです。")
+        return HTTPException(status_code=401, detail="不明なエラーです。")
     except FileNotFoundError as e:
         print(e)
         raise HTTPException(status_code=401, detail="Spotifyの認証が必要です。")
