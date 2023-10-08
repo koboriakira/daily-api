@@ -1,6 +1,6 @@
 import os
 from notion_client import Client
-from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, Select, Checkbox
+from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, Select, Checkbox, Number
 from app.domain.notion import Cover, NotionDatetime, TimeKind
 from app.domain.notion.database.database_type import DatabaseType
 from app.domain.notion.block import BlockFactory, Block, ChildDatabase
@@ -352,16 +352,20 @@ class NotionClient:
                 database_id = child.id
                 response = self.__query(database_type=database_id)
                 for task in response["results"]:
+                    print(task)
                     task_title = Title.from_properties(task["properties"])
                     task_status = Status.of(
                         name="ステータス", param=task["properties"]["ステータス"])
                     task_date = Date.of(
                         name="予定日", param=task["properties"]["予定日"])
+                    minutes = Number.of(
+                        name="時間(分)", param=task["properties"]["時間(分)"])
                     tasks.append({
                         "id": task["id"],
                         "title": task_title.text,
                         "status": task_status.status_name,
-                        "implementation_date": task_date.start
+                        "implementation_date": task_date.start,
+                        "minutes": minutes.number
                     })
         return tasks
 

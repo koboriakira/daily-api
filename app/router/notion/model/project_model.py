@@ -9,6 +9,7 @@ class Task(BaseModel):
     status: str = Field(..., title="タスクのステータス")
     implementation_date: Optional[str] = Field(..., title="タスクの実施予定日",
                                                regex=r"^\d{4}-\d{2}-\d{2}$")
+    minutes: Optional[int] = Field(..., title="タスクの所要時間")
 
 
 class Project(PageBaseModel):
