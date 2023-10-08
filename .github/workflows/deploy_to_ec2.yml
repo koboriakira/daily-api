@@ -39,13 +39,16 @@ jobs:
           name: id_rsa
           known_hosts: ${{ env.KNOWN_HOSTS }}
 
-      # TODO: DockerイメージをビルドしてDocker Hubにプッシュする
-      # その後、Dockerイメージをpullしてrunするようにしてもいいかな
-      - name: rsync
+      - name: Make directories
         run: |
           ssh ec2-user@${{ env.AWS_EC2_IP }} mkdir -p /home/ec2-user/daily-api/app
           ssh ec2-user@${{ env.AWS_EC2_IP }} mkdir -p /home/ec2-user/daily-api/scripts
           ssh ec2-user@${{ env.AWS_EC2_IP }} mkdir -p /home/ec2-user/daily-api/docker/api
+
+      # TODO: DockerイメージをビルドしてDocker Hubにプッシュする
+      # その後、Dockerイメージをpullしてrunするようにしてもいいかな
+      - name: rsync
+        run: |
           rsync -a ./app/ ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/app/
           rsync -a ./requirements.txt ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/requirements.txt
           rsync -a ./scripts/ ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/scripts/
