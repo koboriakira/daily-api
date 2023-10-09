@@ -26,13 +26,14 @@ class CreateProwrestlingRequest(BaseModel):
     title: str = Field(..., title="タイトル")
     date: DateObject = Field(..., title="日付")
     url: Optional[str] = Field(None, title="URL")
+    organization: str = Field(..., title="団体名")
 
 
 @ router.post("/", response_model=PageBaseModel)
 async def create_prowrestling(request: CreateProwrestlingRequest):
     """ プロレス大会情報を作成 """
     entity = NotionClient().create_prowrestling(
-        title=request.title, date=request.date, url=request.url)
+        title=request.title, date=request.date, url=request.url, organization=request.organization)
     return PageBaseModel(**entity)
 
 

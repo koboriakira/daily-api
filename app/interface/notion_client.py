@@ -6,6 +6,7 @@ from app.domain.notion.database.database_type import DatabaseType
 from app.domain.notion.block import BlockFactory, Block, ChildDatabase
 from app.domain.notion.database import DatabaseType
 from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
+from app.domain.notion.properties.select_enums import ProwrestlingOrganization
 from datetime import datetime, timedelta, timezone, date
 from datetime import date as DateObject
 from typing import Optional
@@ -579,11 +580,12 @@ class NotionClient:
             })
         return entities
 
-    def create_prowrestling(self, title: str, date: DateObject, url: Optional[str] = None) -> dict:
+    def create_prowrestling(self, title: str, date: DateObject, organization: str, url: Optional[str] = None) -> dict:
         """ プロレス観戦記録を作成する """
         properties = [
             Title.from_plain_text(name="名前", text=title),
-            Date.from_start_date(name="日付", start_date=date)
+            Date.from_start_date(name="日付", start_date=date),
+            ProwrestlingOrganization.from_name(name=organization)
         ]
         if url is not None:
             properties.append(Url.from_url(name="URL", url=url))
@@ -882,7 +884,13 @@ class NotionClient:
             yield page
 
     def test(self):
-        self.update_daily_log(date=DateObject.today(), daily_goal="test")
+        print(self.__retrieve_page(page_id="2ed9aff4b8724539b4b030c433eddc8e"))
+
+    def test_select_types(self, page_id: str, column_name: str):
+        """ 選択肢を確認するとき用 """
+        page = self.__retrieve_page(page_id=page_id)
+        properties = page["properties"]
+        print(properties[column_name]["select"])
 
 
 def valid_datetime(target: datetime, from_date: datetime, to_date: datetime) -> bool:
@@ -912,4 +920,5 @@ def create_mention_bulleted_list_item(page_id: str) -> dict:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    notion_client.test()
+    notion_client.test_select_types(
+        page_id="2ed9aff4b8724539b4b030c433eddc8e", column_name="団体")
