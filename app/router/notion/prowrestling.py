@@ -16,10 +16,24 @@ router = APIRouter()
 
 @ router.get("/", response_model=list[PageBaseModel])
 async def get_prowrestling():
-    """ 音楽を取得 """
+    """ プロレス大会情報を取得 """
     entities = NotionClient().retrieve_prowrestlings()
     print(entities)
     return convert_to_model(entities)
+
+
+class CreateProwrestlingRequest(BaseModel):
+    title: str = Field(..., title="タイトル")
+    date: DateObject = Field(..., title="日付")
+    url: Optional[str] = Field(None, title="URL")
+
+
+@ router.post("/", response_model=PageBaseModel)
+async def create_prowrestling(request: CreateProwrestlingRequest):
+    """ プロレス大会情報を作成 """
+    entity = NotionClient().create_prowrestling(
+        title=request.title, date=request.date, url=request.url)
+    return PageBaseModel(**entity)
 
 
 def convert_to_model(entites: list[dict]) -> list[PageBaseModel]:

@@ -579,6 +579,34 @@ class NotionClient:
             })
         return entities
 
+    def create_prowrestling(self, title: str, date: DateObject, url: Optional[str] = None) -> dict:
+        """ プロレス観戦記録を作成する """
+        properties = [
+            Title.from_plain_text(name="名前", text=title),
+            Date.from_start_date(name="日付", start_date=date)
+        ]
+        if url is not None:
+            properties.append(Url.from_url(name="URL", url=url))
+
+        page = self.__create_page_in_database(
+            database_type=DatabaseType.PROWRESTLING,
+            properties=properties
+        )
+
+        properties = page["properties"]
+        last_edited_time = NotionDatetime.from_page_block(
+            kind=TimeKind.LAST_EDITED_TIME, block=page)
+        created_time = NotionDatetime.from_page_block(
+            kind=TimeKind.CREATED_TIME, block=page)
+        return {
+            "id": page["id"],
+            "url": page["url"],
+            "title": title,
+            "created_at": created_time.value,
+            "updated_at": last_edited_time.value,
+            "daily_log_id": [],
+        }
+
     def retrieve_books(self) -> list[dict]:
         searched_books = self.__query(
             database_type=DatabaseType.BOOK)["results"]
