@@ -9,6 +9,7 @@ on:
       - main
 
 env:
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
   LINE_TALK_ID: ${{ secrets.LINE_TALK_ID }}
   GAS_DEPLOY_ID: ${{ secrets.GAS_DEPLOY_ID }}
@@ -93,4 +94,4 @@ jobs:
           channel-id: "C04Q3AV4TA5" # 通知チャンネル
           slack-message: "daily-apiのデプロイが完了しました。\nSpotifyを再有効化するため、アクセストークンの取得を手動で行ってください。\n<http://${{ env.COMMON_AWS_BASTION_IP }}/spotify/access_token>"
         env:
-          SLACK_BOT_TOKEN: ${{ env.SLACK_BOT_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ env.COMMON_SLACK_BOT_TOKEN }}
