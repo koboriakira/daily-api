@@ -9,9 +9,6 @@ on:
       - main
 
 env:
-  AWS_EC2_IP: ${{ secrets.AWS_EC2_IP }}
-  SSH_KEY: ${{ secrets.MY_SSH_KEY }}
-  KNOWN_HOSTS: ${{ secrets.MY_KNOWN_HOSTS }}
   SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
   SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
   NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
@@ -32,33 +29,54 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      # SecretsManagerからAWSの認証情報を取得する
+      - name: Configure AWS credentials with AssumeRole
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-1
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GItHubActionsRole
+          role-duration-seconds: 900 # Roleの有効期間を15分に設定。必要に応じて変更する。
+
+      - name: Get Secrets from AWS Secrets Manager
+        id: get_secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v1
+        with:
+          secret-ids: |
+            common
+          parse-json-secrets: true
+
+      # 次の環境変数が格納される
+      # COMMON_COMMON_KNOWN_HOSTS_FOR_AWS_BASTION_FOR_AWS_BASTION
+      # COMMON_AWS_BASTION_IP
+      # COMMON_ID_RSA
+
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
         with:
-          key: ${{ env.SSH_KEY }}
+          key: ${{ env.COMMON_ID_RSA }}
           name: id_rsa
-          known_hosts: ${{ env.KNOWN_HOSTS }}
+          known_hosts: ${{ env.COMMON_KNOWN_HOSTS_FOR_AWS_BASTION }}
 
       - name: Make directories
         run: |
-          ssh ec2-user@${{ env.AWS_EC2_IP }} mkdir -p /home/ec2-user/daily-api/app
-          ssh ec2-user@${{ env.AWS_EC2_IP }} mkdir -p /home/ec2-user/daily-api/scripts
-          ssh ec2-user@${{ env.AWS_EC2_IP }} mkdir -p /home/ec2-user/daily-api/docker/api
+          ssh ec2-user@${{ env.COMMON_AWS_BASTION_IP }} mkdir -p /home/ec2-user/daily-api/app
+          ssh ec2-user@${{ env.COMMON_AWS_BASTION_IP }} mkdir -p /home/ec2-user/daily-api/scripts
+          ssh ec2-user@${{ env.COMMON_AWS_BASTION_IP }} mkdir -p /home/ec2-user/daily-api/docker/api
 
       # TODO: DockerイメージをビルドしてDocker Hubにプッシュする
       # その後、Dockerイメージをpullしてrunするようにしてもいいかな
       - name: rsync
         run: |
-          rsync -a ./app/ ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/app/
-          rsync -a ./requirements.txt ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/requirements.txt
-          rsync -a ./scripts/ ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/scripts/
-          rsync -a ./docker/api/Dockerfile ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/docker/api/Dockerfile
+          rsync -a ./app/ ec2-user@${{ env.COMMON_AWS_BASTION_IP }}:/home/ec2-user/daily-api/app/
+          rsync -a ./requirements.txt ec2-user@${{ env.COMMON_AWS_BASTION_IP }}:/home/ec2-user/daily-api/requirements.txt
+          rsync -a ./scripts/ ec2-user@${{ env.COMMON_AWS_BASTION_IP }}:/home/ec2-user/daily-api/scripts/
+          rsync -a ./docker/api/Dockerfile ec2-user@${{ env.COMMON_AWS_BASTION_IP }}:/home/ec2-user/daily-api/docker/api/Dockerfile
           chmod +x ./.github/workflows/scripts/start_docker_container.sh
-          rsync -a ./.github/workflows/scripts/start_docker_container.sh ec2-user@${{ env.AWS_EC2_IP }}:/home/ec2-user/daily-api/start_docker_container.sh
+          rsync -a ./.github/workflows/scripts/start_docker_container.sh ec2-user@${{ env.COMMON_AWS_BASTION_IP }}:/home/ec2-user/daily-api/start_docker_container.sh
 
       - name: restart docker container
         run: |
-          ssh ec2-user@${{ env.AWS_EC2_IP }} /home/ec2-user/daily-api/start_docker_container.sh \
+          ssh ec2-user@${{ env.COMMON_AWS_BASTION_IP }} /home/ec2-user/daily-api/start_docker_container.sh \
           ${{ env.SPOTIFY_CLIENT_ID }} \
           ${{ env.SPOTIFY_CLIENT_SECRET }} \
           ${{ env.NOTION_API_TOKEN }} \
@@ -73,6 +91,6 @@ jobs:
         uses: slackapi/slack-github-action@v1.24.0
         with:
           channel-id: "C04Q3AV4TA5" # 通知チャンネル
-          slack-message: "daily-apiのデプロイが完了しました。\nSpotifyを再有効化するため、アクセストークンの取得を手動で行ってください。\n<http://${{ env.AWS_EC2_IP }}/spotify/access_token>"
+          slack-message: "daily-apiのデプロイが完了しました。\nSpotifyを再有効化するため、アクセストークンの取得を手動で行ってください。\n<http://${{ env.COMMON_AWS_BASTION_IP }}/spotify/access_token>"
         env:
           SLACK_BOT_TOKEN: ${{ env.SLACK_BOT_TOKEN }}
