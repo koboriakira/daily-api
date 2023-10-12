@@ -9,15 +9,9 @@ on:
       - main
 
 env:
-  SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
-  SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
-  NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
   ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-  LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
   LINE_TALK_ID: ${{ secrets.LINE_TALK_ID }}
-  SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
   GAS_DEPLOY_ID: ${{ secrets.GAS_DEPLOY_ID }}
-  SLACK_USER_TOKEN: ${{ secrets.SLACK_USER_TOKEN }}
 
 jobs:
   deploy:
@@ -49,6 +43,12 @@ jobs:
       # COMMON_COMMON_KNOWN_HOSTS_FOR_AWS_BASTION_FOR_AWS_BASTION
       # COMMON_AWS_BASTION_IP
       # COMMON_ID_RSA
+      # COMMON_SPOTIFY_CLIENT_ID
+      # COMMON_SPOTIFY_CLIENT_SECRET
+      # COMMON_NOTION_API_TOKEN
+      # COMMON_LINE_CHANNEL_ACCESS_TOKEN
+      # COMMON_SLACK_BOT_TOKEN
+      # COMMON_SLACK_USER_TOKEN
 
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
@@ -77,15 +77,15 @@ jobs:
       - name: restart docker container
         run: |
           ssh ec2-user@${{ env.COMMON_AWS_BASTION_IP }} /home/ec2-user/daily-api/start_docker_container.sh \
-          ${{ env.SPOTIFY_CLIENT_ID }} \
-          ${{ env.SPOTIFY_CLIENT_SECRET }} \
-          ${{ env.NOTION_API_TOKEN }} \
+          ${{ env.COMMON_SPOTIFY_CLIENT_ID }} \
+          ${{ env.COMMON_SPOTIFY_CLIENT_SECRET }} \
+          ${{ env.COMMON_NOTION_API_TOKEN }} \
           ${{ env.ACCESS_TOKEN }} \
-          ${{ env.LINE_CHANNEL_ACCESS_TOKEN }} \
+          ${{ env.COMMON_LINE_CHANNEL_ACCESS_TOKEN }} \
           ${{ env.LINE_TALK_ID }} \
           ${{ env.GAS_DEPLOY_ID }} \
-          ${{ env.SLACK_USER_TOKEN }} \
-          ${{ env.SLACK_BOT_TOKEN }}
+          ${{ env.COMMON_SLACK_USER_TOKEN }} \
+          ${{ env.COMMON_SLACK_BOT_TOKEN }}
 
       - name: Post to a Slack channel
         uses: slackapi/slack-github-action@v1.24.0
