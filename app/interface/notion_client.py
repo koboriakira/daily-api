@@ -582,18 +582,22 @@ class NotionClient:
 
     def create_prowrestling(self, title: str, date: DateObject, organization: str, url: Optional[str] = None) -> dict:
         """ プロレス観戦記録を作成する """
-        properties = [
-            Title.from_plain_text(name="名前", text=title),
-            Date.from_start_date(name="日付", start_date=date),
-            ProwrestlingOrganization.from_name(name=organization)
-        ]
-        if url is not None:
-            properties.append(Url.from_url(name="URL", url=url))
+        page = self.__query_with_title_filter(database_type=DatabaseType.PROWRESTLING,
+                                              title=title)
+        if page is None:
+            # 新規作成する
+            properties = [
+                Title.from_plain_text(name="名前", text=title),
+                Date.from_start_date(name="日付", start_date=date),
+                ProwrestlingOrganization.from_name(name=organization)
+            ]
+            if url is not None:
+                properties.append(Url.from_url(name="URL", url=url))
 
-        page = self.__create_page_in_database(
-            database_type=DatabaseType.PROWRESTLING,
-            properties=properties
-        )
+            page = self.__create_page_in_database(
+                database_type=DatabaseType.PROWRESTLING,
+                properties=properties
+            )
 
         properties = page["properties"]
         last_edited_time = NotionDatetime.from_page_block(
