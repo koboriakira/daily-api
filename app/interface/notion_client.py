@@ -1,5 +1,4 @@
 import os
-from notion_client import Client
 from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, Select, Checkbox, Number
 from app.domain.notion import Cover, NotionDatetime, TimeKind
 from app.domain.notion.database.database_type import DatabaseType
@@ -11,6 +10,7 @@ from datetime import datetime, timedelta, timezone, date
 from datetime import date as DateObject
 from typing import Optional
 from app.util.get_logger import get_logger
+from notion_client_wrapper.client_wrapper import ClientWrapper, BasePage
 
 logger = get_logger(__name__)
 
@@ -18,7 +18,7 @@ DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 class NotionClient:
     def __init__(self):
-        self.client = Client(auth=os.getenv("NOTION_API_TOKEN"))
+        self.client = ClientWrapper()
 
     def get_daily_log(self, date: Optional[DateObject] = None, detail: bool = False) -> DailyLog:
         """
@@ -30,133 +30,60 @@ class NotionClient:
         daily_log = self.__find_daily_log(target_date)
         if daily_log is None:
             raise Exception("Not found")
-        properties = daily_log["properties"]
 
-        daily_log_id = daily_log["id"]
-        url = daily_log["url"]
-        created_time = NotionDatetime.from_page_block(
-            kind=TimeKind.CREATED_TIME, block=daily_log)
-        last_edited_time = NotionDatetime.from_page_block(
-            kind=TimeKind.LAST_EDITED_TIME, block=daily_log)
-        parent = daily_log["parent"]
-        archived = daily_log["archived"]
+        daily_log_id = daily_log.id
+        url = daily_log.url
+        created_time = daily_log.created_time
+        last_edited_time = daily_log.last_edited_time
+        parent = daily_log.parent
+        archived = daily_log.archived
+
+        properties = daily_log.properties
 
         # 日付
-        date = Date.of("日付", properties["日付"])
+        date = properties.get_date(name="日付")
 
         # 目標
-        daily_goal = Text.from_dict(name="目標", param=properties["目標"])
+        daily_goal = properties.get_text(name="目標")
 
         # ふりかえり
-        daily_retro_comment = Text.from_dict(
-            name="ふりかえり", param=properties["ふりかえり"])
-
-        if not detail:
-            return DailyLog(
-                id=daily_log_id,
-                url=url,
-                created_time=created_time.value,
-                last_edited_time=last_edited_time.value,
-                parent=parent,
-                archived=archived,
-                date=date,
-                daily_goal=daily_goal.text,
-                daily_retro_comment=daily_retro_comment.text,
-                recipes=[],
-                webclips=[],
-                books=[],
-                prowrestling_watches=[],
-                musics=[],
-                zettlekasten=[],
-                restaurants=[],
-                go_outs=[],
-                aratas=[]
-            )
-
-        # レシピ
-        recipe_ids = self.__get_relation_ids(properties, "レシピ")
-        recipes = list(map(lambda r_id: self.__find_recipe(r_id), recipe_ids))
-
-        # Webクリップ
-        webclip_ids = self.__get_relation_ids(properties, "📎 Webclip")
-        webclips = list(
-            map(lambda w_id: self.__find_webclip(w_id), webclip_ids))
-
-        # 書籍
-        book_ids = self.__get_relation_ids(properties, "📚 書籍")
-        books = list(map(lambda b_id: self.__find_book(b_id), book_ids))
-
-        # プロレス観戦記録
-        prowrestling_watch_ids = self.__get_relation_ids(
-            properties, "観戦記録")
-        prowrestling_watches = list(
-            map(lambda p_id: self.__find_prowrestling_watch(p_id), prowrestling_watch_ids))
-
-        # 音楽
-        music_ids = self.__get_relation_ids(properties, "🎧 ミュージック")
-        musics = list(map(lambda m_id: self.__find_music(m_id), music_ids))
-
-        # Zettlekasten
-        zettlekasten_ids = self.__get_relation_ids(
-            properties, "📝 Zettlekasten")
-        zettlekasten = list(
-            map(lambda z_id: self.__find_zettlekasten(z_id), zettlekasten_ids))
-
-        # 外食
-        restaurant_ids = self.__get_relation_ids(properties, "🥘 外食・お持たせ")
-        restaurants = list(
-            map(lambda r_id: self.__find_restaurant(r_id), restaurant_ids))
-
-        # おでかけ
-        go_out_ids = self.__get_relation_ids(properties, "おでかけ")
-        go_outs = list(
-            map(lambda g_id: self.__find_go_out(g_id), go_out_ids))
-
-        # あらた
-        arata_ids = self.__get_relation_ids(properties, "あらた")
-        aratas = list(
-            map(lambda a_id: self.__find_arata(a_id), arata_ids))
+        daily_retro_comment = properties.get_text(name="ふりかえり")
 
         return DailyLog(
-            id=daily_log["id"],
-            url=daily_log["url"],
-            created_time=daily_log["created_time"],
-            last_edited_time=daily_log["last_edited_time"],
-            parent=daily_log["parent"],
-            archived=daily_log["archived"],
+            id=daily_log_id,
+            url=url,
+            created_time=created_time.value,
+            last_edited_time=last_edited_time.value,
+            parent=parent,
+            archived=archived,
             date=date,
-            daily_goal=daily_goal,
-            daily_retro_comment=daily_retro_comment,
-            recipes=recipes,
-            webclips=webclips,
-            books=books,
-            prowrestling_watches=prowrestling_watches,
-            musics=musics,
-            zettlekasten=zettlekasten,
-            restaurants=restaurants,
-            go_outs=go_outs,
-            aratas=aratas
+            daily_goal=daily_goal.text,
+            daily_retro_comment=daily_retro_comment.text,
+            recipes=[],
+            webclips=[],
+            books=[],
+            prowrestling_watches=[],
+            musics=[],
+            zettlekasten=[],
+            restaurants=[],
+            go_outs=[],
+            aratas=[]
         )
+
 
     def get_daily_log_id(self, date: DateObject) -> str:
         daily_log = self.__find_daily_log(date)
         if daily_log is None:
             raise Exception("Not found")
-        return daily_log["id"]
+        return daily_log.id
 
     def append_blocks(self, block_id: str, block: Block | list[Block]) -> None:
         """ 指定されたブロックを末尾に追加する """
         if isinstance(block, Block):
-            self.__append_block_children(
-                block_id=block_id,
-                children=[block.to_dict()]
-            )
+            self.client.append_block(block_id=block_id, block=block)
             return
         if isinstance(block, list):
-            self.__append_block_children(
-                block_id=block_id,
-                children=list(map(lambda b: b.to_dict(), block))
-            )
+            self.client.append_blocks(block_id=block_id, blocks=block)
             return
         raise ValueError("block must be Block or list[Block]")
 
@@ -167,17 +94,21 @@ class NotionClient:
         if daily_log is None:
             print("Daily Log is not found")
             return
-        self.append_blocks(daily_log["id"], block)
+        self.client.append_block(block_id=daily_log["id"], block=block)
 
-    def add_track(self, name: str, artists: list[str], spotify_url: str, cover_url: str, release_date: DateObject, daily_log_id: str) -> str:
+    def add_track(self, name: str, artists: list[str], spotify_url: str, cover_url: str, release_date: DateObject, daily_log_id: str) -> dict:
         """ 指定されたトラックを音楽データベースに追加する """
         # すでに存在するか確認
-        data = self.__query_with_title_filter(
-            database_type=DatabaseType.MUSIC,
+        musics = self.client.retrieve_database(
+            database_id=DatabaseType.MUSIC.value,
             title=name)
-        if data is not None:
+        if len(musics) > 0:
             print("Track is already registered")
-            return data
+            music = musics[0]
+            return {
+                "id": music.id,
+                "url": music.url
+            }
 
         # タグを作成
         tag_page_ids = []
@@ -214,21 +145,20 @@ class NotionClient:
             properties.append(Text.from_plain_text(
                 name="ふりかえり", text=daily_retro_comment))
 
-        self.__update_page(page_id=daily_log_id,
-                           properties=properties)
+        self.client.update_page(page_id=daily_log_id, properties=properties)
 
     def add_tag(self, name: str) -> str:
         """ 指定されたタグをタグデータベースに追加する """
         # すでに存在するか確認
-        data = self.__query_with_title_filter(
-            database_type=DatabaseType.TAG,
+        data = self.client.retrieve_database(
+            database_id=DatabaseType.TAG.value,
             title=name)
         if data is not None:
             return data["id"]
 
         # 作成
-        result = self.__create_page_in_database(
-            database_type=DatabaseType.TAG,
+        result = self.client.create_page_in_database(
+            database_id=DatabaseType.TAG.value,
             properties=[
                 Title.from_plain_text(name="名前", text=name)
             ]
@@ -253,15 +183,6 @@ class NotionClient:
             if (_daily_log := self.__find_daily_log(daily_date)) is None:
                 _created_daily_log = self.__create_daily_log_page(date=daily_date,
                                                                   weekly_log_id=weekly_log_entity["id"])
-            if i == 5:
-                # 週次レビューのプロジェクトを作成
-                self.create_project(title=f"{year}-Week{isoweeknum}週次レビュー",
-                                    goal="今週のふりかえり、目標達成の確認をして、来週の目標を立てる",
-                                    start_date=daily_date,
-                                    status="Scheduled",
-                                    end_date=daily_date + timedelta(days=1),
-                                    remind_date=daily_date,
-                                    )
 
     def create_monthly_log(self, year: int, month: int) -> None:
         """ マンスリーログを作成する """
@@ -271,17 +192,18 @@ class NotionClient:
 
     def find_monthly_log(self, year: int, month: int) -> dict:
         """ 指定された年と月のマンスリーログを取得する """
-        data = self.__query_with_title_filter(
-            database_type=DatabaseType.MONTHLY_LOG,
-            title=f"{year}-{month:02}"
+        title=f"{year}-{month:02}"
+        data = self.client.retrieve_database(
+            database_type=DatabaseType.MONTHLY_LOG.value,
+            title=title
         )
         return data
 
     def __create_monthly_log_page(self, year: int, month: int) -> dict:
         """ 指定された年と月のマンスリーログを作成する """
         title = Title.from_plain_text(name="名前", text=f"{year}-{month:02}")
-        return self.__create_page_in_database(
-            database_type=DatabaseType.MONTHLY_LOG,
+        return self.client.create_page_in_database(
+            database_id=DatabaseType.MONTHLY_LOG.value,
             properties=[title]
         )
 
@@ -290,15 +212,13 @@ class NotionClient:
         「プロジェクト」データベースの"Today"ステータスを"In progress"にする。
         明日の計画を練るときのための準備として利用される。
         """
-        data = self.client.databases.query(
-            database_id=DatabaseType.PROJECT.value)
-        for result in data["results"]:
-            status = Status.of("ステータス", result["properties"]["ステータス"])
+        data = self.client.retrieve_database(database_id=DatabaseType.PROJECT.value)
+        for page in data:
+            status = page.properties.get_status(name="ステータス")
             if status.is_today():
                 updated_status = Status.from_status_name(
                     name="ステータス", status_name="In progress")
-                self.__update_page(page_id=result["id"],
-                                   properties=[updated_status])
+                self.client.update_page(page_id=page.id, properties=[updated_status])
 
     def create_zettlekasten(self, title: str, url: str) -> None:
         daily_log_entity = self.__find_daily_log(DateObject.today())
@@ -324,8 +244,7 @@ class NotionClient:
             status.status_name for status in status_list]
 
         # まずプロジェクトを検索する
-        searched_projects = self.__query(
-            database_type=DatabaseType.PROJECT)["results"]
+        searched_projects = self.client.retrieve_database(database_id=DatabaseType.PROJECT.value)
         projects = []
         for searched_project in searched_projects:
             project = self._convert_project(searched_project)
@@ -344,7 +263,7 @@ class NotionClient:
                     continue
             # バリデーション: 終了日
             if completed_at is not None:
-                completed_date = Date.of(name="終了日", param=searched_project["properties"]["終了日"])
+                completed_date = searched_project.properties.get_date(name="終了日")
                 if completed_date.start != completed_at.isoformat():
                     continue
 
@@ -356,23 +275,20 @@ class NotionClient:
         return projects
 
     def _find_tasks(self, project_id: str) -> list[dict]:
-        children = self.__get_block_children(page_id=project_id)
+        children = self.client.list_blocks(block_id=project_id)
         tasks = []
         for child in children:
             if isinstance(child, ChildDatabase):
                 database_id = child.id
-                response = self.__query(database_type=database_id)
-                for task in response["results"]:
-                    print(task)
-                    task_title = Title.from_properties(task["properties"])
-                    task_status = Status.of(
-                        name="ステータス", param=task["properties"]["ステータス"])
-                    task_date = Date.of(
-                        name="予定日", param=task["properties"]["予定日"])
-                    minutes = Number.of(
-                        name="時間(分)", param=task["properties"]["時間(分)"])
+                pages = self.client.retrieve_database(database_id=database_id)
+                for page in pages:
+                    properties = page.properties
+                    task_title = properties.get_title()
+                    task_status = properties.get_status(name="ステータス")
+                    task_date = properties.get_date(name="予定日")
+                    minutes = properties.get_number(name="時間(分)")
                     tasks.append({
-                        "id": task["id"],
+                        "id": page.id,
                         "title": task_title.text,
                         "status": task_status.status_name,
                         "implementation_date": task_date.start,
@@ -380,35 +296,31 @@ class NotionClient:
                     })
         return tasks
 
-    def _convert_project(self, project: dict) -> dict:
-        properties = project["properties"]
+    def _convert_project(self, project: BasePage) -> dict:
+        properties = project.properties
         # 目標
-        goal_id_list = self.__get_relation_ids(
-            properties=properties, key="目標")
+        goal_relation = properties.get_relation(name="目標")
         # 今週やる
-        is_thisweek = Checkbox.of(name="今週やる", param=properties["今週やる"])
+        is_thisweek = properties.get_checkbox(name="今週やる")
         # ステータス
-        status = Status.of(name="ステータス", param=properties["ステータス"])
-        daily_log_id = self.__get_relation_ids(
-            properties=properties, key="デイリーログ")
+        status = properties.get_status(name="ステータス")
+        # デイリーログ
+        daily_log_relation = properties.get_relation(name="デイリーログ")
         # リマインド日
-        project_remind_date = Date.of(
-            name="リマインド", param=properties["リマインド"])
+        project_remind_date = properties.get_date(name="リマインド")
         # 終了日
-        completed_at = Date.of(name="終了日", param=properties["終了日"])
+        completed_at = properties.get_date(name="終了日")
         # 繰り返し設定
-        recursive_conf = Text.from_dict(name="繰り返し設定", param=properties["繰り返し設定"])
+        recursive_conf = properties.get_text(name="繰り返し設定")
 
-        title = Title.from_properties(properties)
-        last_edited_time = NotionDatetime.from_page_block(
-            kind=TimeKind.LAST_EDITED_TIME, block=project)
-        created_time = NotionDatetime.from_page_block(
-            kind=TimeKind.CREATED_TIME, block=project)
+        title = properties.get_title()
+        last_edited_time = project.last_edited_time
+        created_time = project.created_time
         return {
-            "id": project["id"],
-            "url": project["url"],
-            "daily_log_id": daily_log_id,
-            "goal_id_list": goal_id_list,
+            "id": project.id,
+            "url": project.url,
+            "daily_log_id": daily_log_relation.id_list,
+            "goal_id_list": goal_relation.id_list,
             "status": status.status_name,
             "completed_at": completed_at.start,
             "recursive_conf": recursive_conf.text,
@@ -426,8 +338,14 @@ class NotionClient:
                        status: Optional[str] = None,
                        end_date: Optional[DateObject] = None,
                        remind_date: Optional[DateObject] = None,
-                       recursive_conf: Optional[str] = None,) -> None:
+                       recursive_conf: Optional[str] = None,) -> dict:
         """ プロジェクトデータベースに新しいプロジェクトを追加する """
+        projects = self.client.retrieve_database(database_id=DatabaseType.PROJECT.value, title=title)
+        if len(projects) > 0:
+            return {
+                "url": projects[0].url
+            }
+
         properties = [
             Title.from_plain_text(name="名前", text=title),
         ]
@@ -457,7 +375,7 @@ class NotionClient:
     def find_project_by_id(self,
                            project_block_id: str) -> dict:
         """ 指定されたプロジェクトを取得する """
-        project_page = self.__retrieve_page(page_id=project_block_id)
+        project_page = self.client.retrieve_page(page_id=project_block_id)
         project = self._convert_project(project_page)
         project["tasks"] = self._find_tasks(project_id=project["id"])
         return project
@@ -470,7 +388,7 @@ class NotionClient:
         if status is not None:
             properties.append(Status.from_status_name(
                 name="ステータス", status_name=status))
-        self.__update_page(
+        self.client.update_page(
             page_id=project_block_id,
             properties=properties
         )
@@ -508,43 +426,32 @@ class NotionClient:
 
     def retrieve_recipes(self, detail: bool = False) -> list[dict]:
         # 食材マスタ
-        ingredient_list = self.__query(
-            database_type=DatabaseType.INGREDIENTS)["results"]
+        ingredient_list = self.client.retrieve_database(database_id=DatabaseType.INGREDIENTS.value)
         ingredients_map = {}
         for ingredient in ingredient_list:
-            properties = ingredient["properties"]
-            title = Title.from_properties(properties)
-            ingredients_map[ingredient["id"]] = title.text
+            properties = ingredient.properties
+            title = properties.get_title()
+            ingredients_map[ingredient.id] = title.text
 
         # まずレシピを検索する
-        searched_recipes = self.__query(
-            database_type=DatabaseType.RECIPE)["results"]
+        searched_recipes = self.client.retrieve_database(database_id=DatabaseType.RECIPE.value)
         recipes = []
         for recipe in searched_recipes:
-            properties = recipe["properties"]
-            title = Title.from_properties(properties)
-            ingredients_relation_id = self.__get_relation_ids(
-                properties=recipe["properties"], key="Ingredients")
-            ingredients = [ingredients_map[id]
-                           for id in ingredients_relation_id]
-            meal_categories = MultiSelect.of(
-                name="種類", param=properties["種類"]) if "種類" in properties else None
-            last_edited_time = NotionDatetime.from_page_block(
-                kind=TimeKind.LAST_EDITED_TIME, block=recipe)
-            created_time = NotionDatetime.from_page_block(
-                kind=TimeKind.CREATED_TIME, block=recipe)
-            daily_log_id = self.__get_relation_ids(
-                properties=properties, key="デイリーログ")
-            print(properties["状態"])
-            select = Select.of(name="状態", param=properties["状態"])
+            properties = recipe.properties
+            title = properties.get_title()
+            ingredients_relation = properties.get_relation(name="Ingredients")
+            ingredients = [ingredients_map[id] for id in ingredients_relation.id_list]
+            meal_categories = properties.get_multi_select(name="種類")
+            daily_log_relation = properties.get_relation(name="デイリーログ")
+            select = properties.get_select(name="状態")
 
             recipes.append({
-                "id": recipe["id"],
-                "url": recipe["url"],
+                "id": recipe.id,
+                "url": recipe.url,
                 "title": title.text,
-                "updated_at": last_edited_time.value,
-                "created_at": created_time.value,
-                "daily_log_id": daily_log_id,
+                "updated_at": recipe.last_edited_time.value,
+                "created_at": recipe.created_time.value,
+                "daily_log_id": daily_log_relation.id_list,
                 "ingredients": ingredients,
                 "meal_categories": [c.name for c in meal_categories.values] if meal_categories is not None else [],
                 "status": select.selected_name if select is not None else "",
@@ -555,87 +462,70 @@ class NotionClient:
         return recipes
 
     def retrieve_webclips(self) -> list[dict]:
-        searched_prowrestlings = self.__query(
-            database_type=DatabaseType.WEBCLIP)["results"]
+        webclips = self.client.retrieve_database(database_id=DatabaseType.WEBCLIP.value)
         entities = []
-        for page in searched_prowrestlings:
-            properties = page["properties"]
-            title = Title.from_properties(properties)
-            last_edited_time = NotionDatetime.from_page_block(
-                kind=TimeKind.LAST_EDITED_TIME, block=page)
-            created_time = NotionDatetime.from_page_block(
-                kind=TimeKind.CREATED_TIME, block=page)
-            daily_log_id = self.__get_relation_ids(
-                properties=properties, key="デイリーログ")
-            clipped_url = Url.of(name="URL", param=properties["URL"])
-            status = Status.of(name="ステータス", param=properties["ステータス"])
+        for page in webclips:
+            properties = page.properties
+            title = properties.get_title()
+            daily_log_relation = properties.get_relation(name="デイリーログ")
+            clipped_url = properties.get_url(name="URL")
+            status = properties.get_status(name="ステータス")
             entities.append({
-                "id": page["id"],
-                "url": page["url"],
+                "id": page.id,
+                "url": page.url,
                 "title": title.text,
-                "created_at": created_time.value,
-                "updated_at": last_edited_time.value,
-                "daily_log_id": daily_log_id,
+                "created_at": page.created_time.value,
+                "updated_at": page.last_edited_time.value,
+                "daily_log_id": daily_log_relation.id_list,
                 "clipped_url": clipped_url.url,
                 "status": status.status_name
             })
         return entities
 
     def retrieve_musics(self) -> list[dict]:
-        searched_musics = self.__query(
-            database_type=DatabaseType.MUSIC)["results"]
+        searched_musics = self.client.retrieve_database(database_id=DatabaseType.MUSIC.value)
         musics = []
         for searched_music in searched_musics:
-            properties = searched_music["properties"]
-            title = Title.from_properties(properties)
-            spotify_url = Url.of(name="Spotify", param=properties["Spotify"])
-            artist_text = Text.from_dict(
-                name="Artist", param=properties["Artist"])
-            last_edited_time = NotionDatetime.from_page_block(
-                kind=TimeKind.LAST_EDITED_TIME, block=searched_music)
-            created_time = NotionDatetime.from_page_block(
-                kind=TimeKind.CREATED_TIME, block=searched_music)
-            daily_log_id = self.__get_relation_ids(
-                properties=properties, key="デイリーログ")
+            properties = searched_music.properties
+            title = properties.get_title()
+            spotify_url = properties.get_url(name="Spotify")
+            artist_text = properties.get_text(name="Artist")
+            last_edited_time = searched_music.last_edited_time
+            created_time = searched_music.created_time
+            daily_log_relation = properties.get_relation(name="デイリーログ")
             musics.append({
-                "id": searched_music["id"],
-                "url": searched_music["url"],
+                "id": searched_music.id,
+                "url": searched_music.url,
                 "artist": artist_text.text,
                 "title": title.text,
                 "spotify_url": spotify_url.url,
                 "created_at": created_time.value,
                 "updated_at": last_edited_time.value,
-                "daily_log_id": daily_log_id
+                "daily_log_id": daily_log_relation.id_list,
             })
         return musics
 
     def retrieve_prowrestlings(self) -> list[dict]:
-        searched_prowrestlings = self.__query(
-            database_type=DatabaseType.PROWRESTLING)["results"]
+        searched_prowrestlings = self.client.retrieve_database(database_id=DatabaseType.PROWRESTLING.value)
         entities = []
         for page in searched_prowrestlings:
-            properties = page["properties"]
-            title = Title.from_properties(properties)
-            last_edited_time = NotionDatetime.from_page_block(
-                kind=TimeKind.LAST_EDITED_TIME, block=page)
-            created_time = NotionDatetime.from_page_block(
-                kind=TimeKind.CREATED_TIME, block=page)
-            daily_log_id = self.__get_relation_ids(
-                properties=properties, key="デイリーログ")
+            properties = page.properties
+            title = properties.get_title()
+            daily_log_relation = properties.get_relation(name="デイリーログ")
             entities.append({
-                "id": page["id"],
-                "url": page["url"],
+                "id": page.id,
+                "url": page.url,
                 "title": title.text,
-                "created_at": created_time.value,
-                "updated_at": last_edited_time.value,
-                "daily_log_id": daily_log_id,
+                "created_at": page.created_time.value,
+                "updated_at": page.last_edited_time.value,
+                "daily_log_id": daily_log_relation.id_list,
             })
         return entities
 
     def create_prowrestling(self, title: str, date: DateObject, organization: str, url: Optional[str] = None) -> dict:
         """ プロレス観戦記録を作成する """
-        page = self.__query_with_title_filter(database_type=DatabaseType.PROWRESTLING,
-                                              title=title)
+        page = self.client.retrieve_database(database_id=DatabaseType.PROWRESTLING.value,
+                                             title=title)
         if page is None:
             # 新規作成する
             properties = [
@@ -646,8 +536,8 @@ class NotionClient:
             if url is not None:
                 properties.append(Url.from_url(name="URL", url=url))
 
-            page = self.__create_page_in_database(
-                database_type=DatabaseType.PROWRESTLING,
+            page = self.client.create_page_in_database(
+                database_id=DatabaseType.PROWRESTLING.value,
                 properties=properties
             )
 
@@ -666,99 +556,62 @@ class NotionClient:
         }
 
     def retrieve_books(self) -> list[dict]:
-        searched_books = self.__query(
-            database_type=DatabaseType.BOOK)["results"]
+        searched_books = self.client.retrieve_database(database_id=DatabaseType.BOOK.value)
         entities = []
         for page in searched_books:
-            properties = page["properties"]
-            title = Title.from_properties(properties)
-            last_edited_time = NotionDatetime.from_page_block(
-                kind=TimeKind.LAST_EDITED_TIME, block=page)
-            created_time = NotionDatetime.from_page_block(
-                kind=TimeKind.CREATED_TIME, block=page)
-            daily_log_id = self.__get_relation_ids(
-                properties=properties, key="デイリーログ")
-            status = Status.of(name="ステータス", param=properties["ステータス"])
+            properties = page.properties
+            title = properties.get_title()
+            daily_log_relation = properties.get_relation(name="デイリーログ")
+            status = properties.get_status(name="ステータス")
             entities.append({
-                "id": page["id"],
-                "url": page["url"],
+                "id": page.id,
+                "url": page.url,
                 "title": title.text,
-                "created_at": created_time.value,
-                "updated_at": last_edited_time.value,
-                "daily_log_id": daily_log_id,
+                "created_at": page.created_time.value,
+                "updated_at": page.last_edited_time.value,
+                "daily_log_id": daily_log_relation.id_list,
                 "status": status.status_name
             })
         return entities
 
     def retrieve_zettlekastens(self) -> list[dict]:
-        searched_zettlekastens = self.__query(
-            database_type=DatabaseType.ZETTLEKASTEN)["results"]
+        searched_zettlekastens = self.client.retrieve_database(database_id=DatabaseType.ZETTLEKASTEN.value)
         entities = []
         for page in searched_zettlekastens:
-            properties = page["properties"]
-            title = Title.from_properties(properties)
-            last_edited_time = NotionDatetime.from_page_block(
-                kind=TimeKind.LAST_EDITED_TIME, block=page)
-            created_time = NotionDatetime.from_page_block(
-                kind=TimeKind.CREATED_TIME, block=page)
-            daily_log_id = self.__get_relation_ids(
-                properties=properties, key="デイリーログ")
+            properties = page.properties
+            title = properties.get_title()
+            daily_log_relation = properties.get_relation(name="デイリーログ")
             entities.append({
-                "id": page["id"],
-                "url": page["url"],
+                "id": page.id,
+                "url": page.url,
                 "title": title.text,
-                "created_at": created_time.value,
-                "updated_at": last_edited_time.value,
-                "daily_log_id": daily_log_id,
+                "created_at": page.created_time.value,
+                "updated_at": page.last_edited_time.value,
+                "daily_log_id": daily_log_relation.id_list,
             })
         return entities
 
-    def append_comment(self, page_id: str, text: str):
-        """ 指定されたページにコメントを追加する """
-        return self.client.comments.create(
-            parent={
-                "page_id": page_id
-            },
-            rich_text=[
-                {
-                    "text": {
-                        "content": text
-                    }
-                }
-            ],
-        )
 
     def retrieve_comments(self, page_id: str) -> list[dict]:
         """ 指定されたページのコメントを取得する """
-        comments = self.client.comments.list(
-            block_id=page_id
-        )
-        return comments["results"]
+        return self.client.retrieve_comments(page_id=page_id)
 
     def __create_page_in_database(self, database_type: DatabaseType, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """
-        return self.client.pages.create(
-            parent={
-                "type": "database_id",
-                "database_id": database_type.value
-            },
-            cover=cover.__dict__() if cover is not None else None,
-            properties=Properties(values=properties).__dict__() if len(
-                properties) > 0 else None
+        return self.client.create_page_in_database(
+            database_id=database_type.value,
+            cover=cover,
+            properties=properties,
         )
 
-    def __update_page(self, page_id: str, properties: list[Property] = []) -> None:
-        """ 指定されたページを更新する """
-        self.client.pages.update(
-            page_id=page_id,
-            properties=Properties(values=properties).__dict__()
-        )
-
-    def __find_daily_log(self, date: DateObject) -> Optional[dict]:
-        return self.__query_with_title_filter(
-            database_type=DatabaseType.DAILY_LOG,
+    def __find_daily_log(self, date: DateObject) -> Optional[BasePage]:
+        daily_logs = self.client.retrieve_database(
+            database_id=DatabaseType.DAILY_LOG.value,
             title=date.isoformat()
         )
+        if len(daily_logs) == 0:
+            return None
+        return daily_logs[0]
 
     def __create_daily_log_page(self, date: date, weekly_log_id: str) -> dict:
         return self.__create_page_in_database(
@@ -770,23 +623,28 @@ class NotionClient:
         )
 
     def find_weekly_log(self, year: int, isoweeknum: int) -> Optional[dict]:
-        weekly_log = self.__query_with_title_filter(
-            database_type=DatabaseType.WEEKLY_LOG,
-            title=f"{year}-Week{isoweeknum}"
+        title=f"{year}-Week{isoweeknum}"
+        weekly_logs = self.client.retrieve_database(
+            database_id=DatabaseType.WEEKLY_LOG.value,
+            title=title
         )
-        if weekly_log is None:
+        if len(weekly_logs) == 0:
             return None
 
-        properties = weekly_log["properties"]
-        title = Title.from_properties(properties)
-        goal = Text.from_dict(name="目標", param=properties["目標"])
+        weekly_log = weekly_logs[0]
+        title = weekly_log.properties.get_title()
+        goal = weekly_log.properties.get_text(name="目標")
 
         return {
-            "id": weekly_log["id"],
-            "url": weekly_log["url"],
+            "id": weekly_log.id,
+            "url": weekly_log.url,
             "title": title.text,
             "goal": goal.text,
         }
+
+    def append_comment(self, page_id: str, text: str) -> None:
+        """ 指定されたページにコメントを追加する """
+        self.client.append_comment(page_id=page_id, text=text)
 
     def __create_weekly_log_page(self, year: int, isoweeknum: int) -> dict:
         title_text = f"{year}-Week{isoweeknum}"
@@ -804,143 +662,10 @@ class NotionClient:
             ]
         )
 
-    def __query_with_title_filter(self, database_type: DatabaseType, title: str) -> Optional[dict]:
-        data = self.__query(database_type=database_type)
-        for page in data["results"]:
-            title_field = Title.from_properties(page["properties"])
-            if title_field.text == title:
-                return page
-        return None
-
-    def __query(self, database_type: DatabaseType | str) -> dict:
-        database_id = database_type.value if isinstance(
-            database_type, DatabaseType) else database_type
-        return self.client.databases.query(
-            database_id=database_id
-        )
-
-    def __retrieve_page(self, page_id: str) -> dict:
-        return self.client.pages.retrieve(page_id=page_id)
-
-    def __find_recipe(self, page_id: str) -> Recipe:
-        result = self.__retrieve_page(page_id=page_id)
-        blocks = self.__get_block_children(page_id)
-        return Recipe.of(result, blocks)
-
-    def __find_webclip(self, page_id: str) -> Webclip:
-        result = self.__retrieve_page(page_id=page_id)
-        blocks = self.__get_block_children(page_id)
-        return Webclip.of(result, blocks)
-
-    def __find_book(self, page_id: str) -> Book:
-        result = self.__retrieve_page(page_id=page_id)
-        blocks = self.__get_block_children(page_id)
-        return Book.of(result, blocks)
-
-    def __find_prowrestling_watch(self, page_id: str) -> ProwrestlingWatch:
-        result = self.__retrieve_page(page_id=page_id)
-        blocks = self.__get_block_children(page_id)
-        return ProwrestlingWatch.of(result, blocks)
-
-    def __find_music(self, page_id: str) -> Music:
-        result = self.__retrieve_page(page_id=page_id)
-        blocks = self.__get_block_children(page_id)
-        return Music.of(result, blocks)
-
-    def __find_zettlekasten(self, page_id: str) -> Zettlekasten:
-        result = self.__retrieve_page(page_id=page_id)
-        blocks = self.__get_block_children(page_id)
-        return Zettlekasten.of(result, blocks)
-
-    def __find_restaurant(self, page_id: str) -> Restaurant:
-        result = self.__retrieve_page(page_id=page_id)
-        blocks = self.__get_block_children(page_id)
-        return Restaurant.of(result, blocks)
-
-    def __find_go_out(self, page_id: str) -> GoOut:
-        result = self.__retrieve_page(page_id=page_id)
-        blocks = self.__get_block_children(page_id)
-        return GoOut.of(result, blocks)
-
-    def __find_arata(self, page_id: str) -> Arata:
-        result = self.__retrieve_page(page_id=page_id)
-        blocks = self.__get_block_children(page_id)
-        return Arata.of(result, blocks)
 
     def __get_relation_ids(self, properties: dict, key: str) -> list[str]:
         return list(map(
             lambda r: r["id"], properties[key]["relation"]))
-
-    def __get_block_children(self, page_id: str) -> list:
-        block_entities = self.__list_blocks(block_id=page_id)[
-            "results"]
-        return list(map(lambda b: BlockFactory.create(b), block_entities))
-
-    def __append_block_children(self, block_id: str, children=list[dict]) -> list:
-        print(children)
-        self.client.blocks.children.append(
-            block_id=block_id, children=children)
-
-    def __list_blocks(self, block_id: str) -> dict:
-        return self.client.blocks.children.list(block_id=block_id)
-
-    def add_24hours_pages_in_daily_log(self, date: str) -> None:
-        """ 直近24時間以内に更新されたページを、当日のデイリーログに追加する"""
-        now = DateObject.fromisoformat('2023-08-11')
-        daily_log_id = self.__find_daily_log(date=now)["id"]
-        from_date = now - timedelta(hours=9)
-        to_date = now + timedelta(hours=15)
-
-        # 更新のあったページのID一覧を取得
-        now = datetime.now(tz=timezone(timedelta(hours=0)))
-        result = list(self.get_pages(from_date=from_date, to_date=to_date))
-        page_id_list = list(map(lambda page: page["id"], result))
-
-        # デイリーログをに追加
-        mention_bulleted_list_items = list(
-            map(lambda page_id: create_mention_bulleted_list_item(page_id=page_id), page_id_list))
-        self.__append_block_children(
-            block_id=daily_log_id,
-            children=mention_bulleted_list_items
-        )
-
-    def get_pages(self, from_date: datetime, to_date: datetime):
-        """ 直近24時間以内に更新されたページを取得する """
-        result = []
-        while True:
-            start_cursor = search_result["next_cursor"] if len(
-                result) > 0 and "next_cursor" in search_result else None
-            search_result = self.client.search(
-                filter={
-                    "value": "page",
-                    "property": "object"
-                },
-                sort={
-                    "direction": "descending",
-                    "timestamp": "last_edited_time"
-                },
-                start_cursor=start_cursor
-            )
-            last_page = search_result["results"][-1]
-            last_page_last_edited_time = datetime.fromisoformat(
-                last_page["last_edited_time"])
-            if last_page_last_edited_time.timestamp() < from_date:
-                filtered_results = list(filter(lambda r: valid_datetime(datetime.fromisoformat(
-                    r["last_edited_time"]), from_date, to_date), search_result["results"]))
-                result.extend(filtered_results)
-                break
-            else:
-                filtered_results = list(filter(lambda r: valid_datetime(datetime.fromisoformat(
-                    r["last_edited_time"]), from_date, to_date), search_result["results"]))
-                result.extend(filtered_results)
-        for page in result:
-            parent = page["parent"]
-            if parent["type"] == "database_id" and parent["database_id"] in DatabaseType.ignore_updated_at():
-                continue
-            yield page
-
-    def test(self):
-        print(self.__retrieve_page(page_id="2ed9aff4b8724539b4b030c433eddc8e"))
 
     def test_select_types(self, page_id: str, column_name: str):
         """ 選択肢を確認するとき用 """
