@@ -17,6 +17,8 @@ class Project(PageBaseModel):
     status: str = Field(..., title="プロジェクトのステータス")
     tasks: Optional[list[Task]] = Field(title="タスクのリスト", default=None)
     is_thisweek: bool = Field(..., title="今週やるプロジェクトかどうか")
+    recursive_conf: Optional[str] = Field(title="繰り返しの設定", default=None)
+    completed_at: Optional[str] = Field(title="プロジェクトの完了日", default=None)
 
 
 def convert_to_project_model(entites: list[dict]) -> list[Project]:

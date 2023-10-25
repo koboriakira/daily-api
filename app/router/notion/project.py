@@ -94,6 +94,16 @@ def update_project(project_id: str, request: UpdateProjectRequest):
         "success": True,
     }
 
+@ router.post("/recursive/")
+def update_recursive_project(project_id: str, request: UpdateProjectRequest):
+    """ 繰り返しのプロジェクトを作成する """
+    notion_client = NotionClient()
+    notion_client.update_recursive_project(date=DateObject.today())
+    return {
+        "success": True,
+    }
+
+
 
 def _get_status_list(status_str: Optional[str]) -> list[Status]:
     if status_str is None:

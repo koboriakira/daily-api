@@ -10,7 +10,11 @@ from app.domain.notion.properties.select_enums import ProwrestlingOrganization
 from datetime import datetime, timedelta, timezone, date
 from datetime import date as DateObject
 from typing import Optional
+from app.util.get_logger import get_logger
 
+logger = get_logger(__name__)
+
+DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 class NotionClient:
     def __init__(self):
@@ -313,7 +317,8 @@ class NotionClient:
                           remind_date: Optional[DateObject] = None,
                           goal_id: Optional[str] = None,
                           get_detail: bool = True,
-                          filter_thisweek: bool = False,) -> list[dict]:
+                          filter_thisweek: bool = False,
+                          completed_at: Optional[DateObject] = None) -> list[dict]:
         """ プロジェクトデータベースの全てのページを取得する """
         status_name_list = [
             status.status_name for status in status_list]
@@ -336,6 +341,11 @@ class NotionClient:
             # バリデーション: リマインド日
             if remind_date is not None:
                 if project["remind_date"] != remind_date.isoformat():
+                    continue
+            # バリデーション: 終了日
+            if completed_at is not None:
+                completed_date = Date.of(name="終了日", param=searched_project["properties"]["終了日"])
+                if completed_date.start != completed_at.isoformat():
                     continue
 
             # プロジェクトの詳細を取得する設定がある場合はタスクを取得する
@@ -384,6 +394,11 @@ class NotionClient:
         # リマインド日
         project_remind_date = Date.of(
             name="リマインド", param=properties["リマインド"])
+        # 終了日
+        completed_at = Date.of(name="終了日", param=properties["終了日"])
+        # 繰り返し設定
+        recursive_conf = Text.from_dict(name="繰り返し設定", param=properties["繰り返し設定"])
+
         title = Title.from_properties(properties)
         last_edited_time = NotionDatetime.from_page_block(
             kind=TimeKind.LAST_EDITED_TIME, block=project)
@@ -395,6 +410,8 @@ class NotionClient:
             "daily_log_id": daily_log_id,
             "goal_id_list": goal_id_list,
             "status": status.status_name,
+            "completed_at": completed_at.start,
+            "recursive_conf": recursive_conf.text,
             "title": title.text,
             "remind_date": project_remind_date.start,
             "is_thisweek": is_thisweek.checked,
@@ -408,7 +425,8 @@ class NotionClient:
                        goal: Optional[str] = None,
                        status: Optional[str] = None,
                        end_date: Optional[DateObject] = None,
-                       remind_date: Optional[DateObject] = None,) -> None:
+                       remind_date: Optional[DateObject] = None,
+                       recursive_conf: Optional[str] = None,) -> None:
         """ プロジェクトデータベースに新しいプロジェクトを追加する """
         properties = [
             Title.from_plain_text(name="名前", text=title),
@@ -427,6 +445,9 @@ class NotionClient:
         if remind_date is not None:
             properties.append(Date.from_start_date(
                 name="リマインド", start_date=remind_date))
+        if recursive_conf is not None:
+            properties.append(Text.from_plain_text(
+                name="繰り返し設定", text=recursive_conf))
 
         return self.__create_page_in_database(
             database_type=DatabaseType.PROJECT,
@@ -453,6 +474,37 @@ class NotionClient:
             page_id=project_block_id,
             properties=properties
         )
+
+    def update_recursive_project(self, date: DateObject) -> None:
+        """ 繰り返しプロジェクトを更新する """
+        # 指定された日付に完了したプロジェクトを取得する
+        projects = self.retrieve_projects(completed_at=date)
+        for project in projects:
+            recursive_conf: Optional[str] = project["recursive_conf"]
+            if recursive_conf is None or recursive_conf == "":
+                continue
+            logger.info(f"recursive_conf: {project['title']} {recursive_conf}")
+            target_date = None
+            if recursive_conf.lower().startswith("next"):
+                # "next"系
+                next_recursive_conf  = recursive_conf.lower().replace("next", "").strip()
+                # next_recursive_confが数値だった場合
+                if next_recursive_conf.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "").isdecimal():
+                   # 次の月のn日
+                   n = next_recursive_conf.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "")
+                   target_date = DateObject(year=date.year, month=date.month + 1, day=int(n))
+                # next_recursive_confが曜日だった場合
+                elif next_recursive_conf in DAYS:
+                    # 次のn曜日
+                    target_date = self.__get_next_weekday(date, next_recursive_conf)
+            self.create_project(title=project["title"],
+                                start_date=target_date,
+                                status=Status.from_status_name(name="ステータス", status_name="Scheduled").status_name,
+                                remind_date=target_date,
+                                recursive_conf=recursive_conf,
+                                )
+
+
 
     def retrieve_recipes(self, detail: bool = False) -> list[dict]:
         # 食材マスタ
@@ -896,6 +948,16 @@ class NotionClient:
         properties = page["properties"]
         print(properties[column_name]["select"])
 
+    def __get_next_weekday(date: DateObject, day: str) -> DateObject:
+        """ 指定された日付以降の、指定された曜日に該当する最も近い日付を計算する """
+        day_index = DAYS.index(day)
+        target_date = date
+        while True:
+            target_date = target_date + timedelta(days=1)
+            if target_date.weekday() == day_index:
+                return target_date
+        # ↓ ありえないけど一応
+        return None
 
 def valid_datetime(target: datetime, from_date: datetime, to_date: datetime) -> bool:
     return from_date.timestamp() <= target.timestamp() and target.timestamp() <= to_date.timestamp()
@@ -924,5 +986,6 @@ def create_mention_bulleted_list_item(page_id: str) -> dict:
 if __name__ == "__main__":
     # python -m app.interface.notion_client
     notion_client = NotionClient()
-    notion_client.test_select_types(
-        page_id="2ed9aff4b8724539b4b030c433eddc8e", column_name="団体")
+    # notion_client.test_select_types(
+    #     page_id="2ed9aff4b8724539b4b030c433eddc8e", column_name="団体")
+    notion_client.update_recursive_project(date=DateObject.today())
