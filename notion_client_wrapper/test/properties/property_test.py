@@ -1,5 +1,5 @@
 from unittest import TestCase
-from notion_client_wrapper.properties import Properties, Property, Title, Text
+from notion_client_wrapper.properties import Properties, Property, Title, Text, MultiSelect
 
 
 class PropertyTest(TestCase):
@@ -58,3 +58,27 @@ class PropertyTest(TestCase):
         actual: Text = Property.from_dict("text", input)
         assert actual.name == "text"
         assert actual.text == "サンプルテキスト"
+
+    def test_タグの変換(self):
+        input = {
+          "id": "idFT",
+          "type": "multi_select",
+          "multi_select": [
+            {
+              "id": "a0c44ff8-352a-4aff-8546-e3c58b1ea886",
+              "name": "タグA",
+              "color": "orange"
+            },
+            {
+              "id": "054f3c75-69af-4274-9f61-4e1fc594a97d",
+              "name": "タグB",
+              "color": "brown"
+            }
+          ]
+        }
+        actual: MultiSelect = Property.from_dict("text", input)
+        assert actual.name == "text"
+        assert actual.values[0].name == "タグA"
+        assert actual.values[0].color == "orange"
+        assert actual.values[1].name == "タグB"
+        assert actual.values[1].color == "brown"

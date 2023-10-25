@@ -18,6 +18,8 @@ class ClientWrapper:
 
       def retrieve_page(self, page_id: str) -> BasePage:
           page_entity = self.__retrieve_page(page_id=page_id)
+          import json
+          print(json.dumps(page_entity, ensure_ascii=False))
           id = page_entity["id"]
           created_time = page_entity["created_time"]
           last_edited_time = page_entity["last_edited_time"]
@@ -57,5 +59,5 @@ class ClientWrapper:
 if __name__ == "__main__":
     # python -m notion_client_wrapper.client_wrapper
     client = ClientWrapper()
-    page = client.retrieve_page(page_id="454a446facc94daf9343f1b56905d2b7")
+    page = client.retrieve_page(page_id="b7576fbdde9b476f913924c1bd90b250")
     print(page)
