@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Any
 from notion_client_wrapper.properties.title import Title
-
+from notion_client_wrapper.properties.text import Text
 
 class Property(metaclass=ABCMeta):
     id: Optional[str]
@@ -17,3 +17,5 @@ class Property(metaclass=ABCMeta):
         match type:
             case "title":
                 return Title.from_property(key, property)
+            case "rich_text":
+                return Text.from_dict(key, property)
