@@ -16,6 +16,14 @@ class Relation(Property):
         self.has_more = has_more
 
     @staticmethod
+    def of(name: str, property: dict[str, str]) -> "Relation":
+        id_list = list(map(lambda r: r["id"], property["relation"]))
+        return Relation(
+            name=name,
+            id_list=id_list,
+            has_more=property["has_more"])
+
+    @staticmethod
     def from_id_list(name: str, id_list: list[str]) -> "Relation":
         return Relation(
             name=name,
