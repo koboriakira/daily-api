@@ -62,7 +62,7 @@ def get_calendar(start_date: DateObject, end_date: DateObject, achievement: Opti
                 # <br>タグは改行に置換する
                 description = description.replace("<br>", "\n")
                 # そのほかのHTMLタグはすべて置換する
-                description = re.sub(r"<[^>]*?>", "", description)
+                # description = re.sub(r"<[^>]*?>", "", description)
                 description = read_yaml(description)
             except:
                 print("yaml parse error")
