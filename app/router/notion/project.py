@@ -40,7 +40,7 @@ async def get_projects(status: Optional[str] = None, remind_date: Optional[DateO
 
 class PostProjectRequest(BaseModel):
     title: str = Field(title="プロジェクトのタイトル")
-    goal: str = Field(title="プロジェクトのゴール")
+    goal: str = Field(title="プロジェクトのゴール", default=None)
     status: Optional[str] = Field(title="プロジェクトのステータス",
                                   default="Inbox",
                                   regex=ProjectStatusList.to_regex())
