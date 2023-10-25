@@ -25,11 +25,10 @@ async def post_daily_log(date: DateObject, request: DailyLogRequest):
 
 
 @router.get("/")
-async def get_daily_log(date: Optional[DateObject] = None, detail: bool = False):
+async def get_daily_log(date: Optional[DateObject] = None):
     """ Notionのデイリーログを取得する """
     notion_client = NotionClient()
-    return notion_client.get_daily_log(date=date,
-                                       detail=detail)
+    return notion_client.get_daily_log(date=date)
 
 
 @router.get("/{date}/id", response_model=str)

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from datetime import date as DateObject
 from typing import Optional
 from notion_client_wrapper.client_wrapper import ClientWrapper, BasePage
-from notion_client_wrapper.properties import Property, Date, Title, Text, Relation, Status, Url, Cover
+from notion_client_wrapper.properties import Property, Date, Title, Text, Relation, Status, Url, Cover, Select
 from notion_client_wrapper.block import Block, ChildDatabase
 
 
@@ -476,26 +476,25 @@ class NotionClient:
         """ プロレス観戦記録を作成する """
         pages = self.client.retrieve_database(database_id=DatabaseType.PROWRESTLING.value,
                                              title=title)
+
+        if len(pages) > 0:
+            page = pages[0]
         if len(pages) == 0:
             # 新規作成する
+            prowrestling_organization = ProwrestlingOrganization.from_name(name=organization)
             properties = [
                 Title.from_plain_text(name="名前", text=title),
                 Date.from_start_date(name="日付", start_date=date),
-                ProwrestlingOrganization.from_name(name=organization)
+                prowrestling_organization.to_select(),
             ]
             if url is not None:
                 properties.append(Url.from_url(name="URL", url=url))
 
-            page = self.client.create_page_in_database(
+            created_page = self.client.create_page_in_database(
                 database_id=DatabaseType.PROWRESTLING.value,
                 properties=properties
             )
-            return {
-                "id": page["id"],
-                "url": page["url"]
-            }
-
-        page = pages[0]
+            page = self.client.retrieve_page(page_id=created_page["id"])
         return {
             "id": page.id,
             "url": page.url,
