@@ -11,3 +11,6 @@ from .select import Select
 from .checkbox import Checkbox
 from .number import Number
 from .notion_datetime import NotionDatetime
+from .cover import Cover
+from .icon import Icon
+from .parent import Parent

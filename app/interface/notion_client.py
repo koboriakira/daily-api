@@ -1,16 +1,15 @@
 import os
-from app.domain.notion.properties import Date, Title, Relation, Properties, Status, Property, Text, Url, MultiSelect, Select, Checkbox, Number
-from app.domain.notion import Cover, NotionDatetime, TimeKind
 from app.domain.notion.database.database_type import DatabaseType
-from app.domain.notion.block import BlockFactory, Block, ChildDatabase
-from app.domain.notion.database import DatabaseType
-from app.domain.notion.page import DailyLog, Recipe, Webclip, Book, ProwrestlingWatch, Music, Zettlekasten, Restaurant, GoOut, Arata
+from app.domain.notion.page import DailyLog
 from app.domain.notion.properties.select_enums import ProwrestlingOrganization
-from datetime import datetime, timedelta, timezone, date
+from datetime import datetime, timedelta, date
 from datetime import date as DateObject
 from typing import Optional
 from app.util.get_logger import get_logger
 from notion_client_wrapper.client_wrapper import ClientWrapper, BasePage
+from notion_client_wrapper.properties import Property, Date, Title, Text, Relation, Status, Url, Cover
+from notion_client_wrapper.block import Block, ChildDatabase
+
 
 logger = get_logger(__name__)
 
@@ -524,9 +523,9 @@ class NotionClient:
 
     def create_prowrestling(self, title: str, date: DateObject, organization: str, url: Optional[str] = None) -> dict:
         """ プロレス観戦記録を作成する """
-        page = self.client.retrieve_database(database_id=DatabaseType.PROWRESTLING.value,
+        pages = self.client.retrieve_database(database_id=DatabaseType.PROWRESTLING.value,
                                              title=title)
-        if page is None:
+        if len(pages) == 0:
             # 新規作成する
             properties = [
                 Title.from_plain_text(name="名前", text=title),
@@ -540,18 +539,18 @@ class NotionClient:
                 database_id=DatabaseType.PROWRESTLING.value,
                 properties=properties
             )
+            return {
+                "id": page["id"],
+                "url": page["url"]
+            }
 
-        properties = page["properties"]
-        last_edited_time = NotionDatetime.from_page_block(
-            kind=TimeKind.LAST_EDITED_TIME, block=page)
-        created_time = NotionDatetime.from_page_block(
-            kind=TimeKind.CREATED_TIME, block=page)
+        page = pages[0]
         return {
-            "id": page["id"],
-            "url": page["url"],
+            "id": page.id,
+            "url": page.url,
             "title": title,
-            "created_at": created_time.value,
-            "updated_at": last_edited_time.value,
+            "created_at": page.created_time.value,
+            "updated_at": page.last_edited_time.value,
             "daily_log_id": [],
         }
 
@@ -661,11 +660,6 @@ class NotionClient:
                 Date.from_range(name="期間", start=start_date, end=end_date),
             ]
         )
-
-
-    def __get_relation_ids(self, properties: dict, key: str) -> list[str]:
-        return list(map(
-            lambda r: r["id"], properties[key]["relation"]))
 
     def test_select_types(self, page_id: str, column_name: str):
         """ 選択肢を確認するとき用 """

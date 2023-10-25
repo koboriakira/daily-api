@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from notion_client_wrapper.base_operator import BaseOperator
-from notion_client_wrapper.cover import Cover
 from notion_client_wrapper.block import Block
-from notion_client_wrapper.icon import Icon
+from notion_client_wrapper.properties.cover import Cover
+from notion_client_wrapper.properties.icon import Icon
 from notion_client_wrapper.properties.properties import Properties
 from notion_client_wrapper.properties.notion_datetime import NotionDatetime
 from typing import Optional
