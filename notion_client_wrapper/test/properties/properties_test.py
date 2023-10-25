@@ -31,6 +31,6 @@ class PropertiesTest(TestCase):
         }
         actual = Properties.from_dict(input)
 
-        title = actual.get_title(key="title")
+        title = actual.get_title()
         self.assertEqual(title.name, "title")
         self.assertEqual(title.text, "テスト用ページ")

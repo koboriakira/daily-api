@@ -7,6 +7,7 @@ from notion_client_wrapper.cover import Cover
 from notion_client_wrapper.icon import Icon
 from notion_client_wrapper.properties.properties import Properties
 from notion_client_wrapper.properties.property import Property
+from notion_client_wrapper.properties.notion_datetime import NotionDatetime
 from typing import Optional
 
 
@@ -23,6 +24,32 @@ class ClientWrapper:
         page_entity = self.__retrieve_page(page_id=page_id)
         return self.__convert_page_model(page_entity=page_entity, include_children=True)
 
+    def update_page(self, page_id: str, properties: list[Property] = []) -> dict:
+        """ 指定されたページを更新する """
+        return self.client.pages.update(
+            page_id=page_id,
+            properties=Properties(values=properties).__dict__()
+        )
+
+    def retrieve_comments(self, page_id: str) -> list[dict]:
+        """ 指定されたページのコメントを取得する """
+        comments = self.client.comments.list(
+            block_id=page_id
+        )
+        return comments["results"]
+
+    def create_page_in_database(self, database_id: str, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
+        """ データベース上にページを新規作成する """
+        return self.client.pages.create(
+            parent={
+                "type": "database_id",
+                "database_id": database_id
+            },
+            cover=cover.__dict__() if cover is not None else None,
+            properties=Properties(values=properties).__dict__() if len(
+                properties) > 0 else None
+        )
+
     def retrieve_database(self, database_id: str, title: Optional[str] = None) -> list[BasePage]:
         """ 指定されたデータベースのページを取得する """
         data = self.client.databases.query(database_id=database_id)
@@ -34,9 +61,13 @@ class ClientWrapper:
             result = list(filter(lambda p: p.properties.get_title().text == title, result))
         return result
 
-    def list_blocks(self, block_id: str) -> dict:
+    def list_blocks(self, block_id: str) -> list[Block]:
         """ 指定されたブロックの子ブロックを取得する """
-        return self.client.blocks.children.list(block_id=block_id)
+        return self.__get_block_children(page_id=block_id)
+
+    def append_block(self, block_id: str, blocks: Block) -> dict:
+        """ 指定されたブロックに子ブロックを追加する """
+        return self.append_blocks(block_id=block_id, blocks=[blocks])
 
     def append_blocks(self, block_id: str, blocks: list[Block]) -> dict:
         """ 指定されたブロックに子ブロックを追加する """
@@ -58,8 +89,9 @@ class ClientWrapper:
 
     def __convert_page_model(self, page_entity: dict, include_children: bool = True) -> BasePage:
         id = page_entity["id"]
-        created_time = page_entity["created_time"]
-        last_edited_time = page_entity["last_edited_time"]
+        url = page_entity["url"]
+        created_time = NotionDatetime.created_time(page_entity["created_time"])
+        last_edited_time = NotionDatetime.last_edited_time(page_entity["last_edited_time"])
         created_by = BaseOperator.of(page_entity["created_by"])
         last_edited_by = BaseOperator.of(page_entity["last_edited_by"])
         cover = Cover.of(page_entity["cover"]) if page_entity["cover"] is not None else None
@@ -68,6 +100,7 @@ class ClientWrapper:
         properties=Properties.from_dict(page_entity["properties"])
         block_children = self.__get_block_children(page_id=id) if include_children else []
         return BasePage(id=id,
+                        url=url,
                         created_time=created_time,
                         last_edited_time=last_edited_time,
                         created_by=created_by,

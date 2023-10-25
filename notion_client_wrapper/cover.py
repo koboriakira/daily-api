@@ -12,6 +12,13 @@ class Cover():
         self.external_url = external_url
 
     @staticmethod
+    def of(param: dict) -> "Cover":
+        return Cover(
+            type=param["type"],
+            external_url=param["external"]["url"] if "external" in param else None
+        )
+
+    @staticmethod
     def from_external_url(external_url: str) -> "Cover":
         return Cover(
             type="external",

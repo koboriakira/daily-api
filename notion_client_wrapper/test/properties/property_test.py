@@ -1,5 +1,5 @@
 from unittest import TestCase
-from notion_client_wrapper.properties import Property, Title, Text, MultiSelect, Select, Number, Date, Status, Checkbox, Relation, Url
+from notion_client_wrapper.properties import Property, Title, Text, MultiSelect, Select, Number, Date, Status, Checkbox, Relation, Url, NotionDatetime
 
 
 class PropertyTest(TestCase):
@@ -162,3 +162,12 @@ class PropertyTest(TestCase):
         }
         actual: Relation = Property.from_dict("dummy", input)
         assert actual.id_list[0] == "aa0f4973-c645-427c-bb69-b17eb47a3eaf"
+
+    def test_Notion日時の変換(self):
+        input = {
+            'id': 'Af~u',
+            'type': 'last_edited_time',
+            'last_edited_time': '2023-10-25T01:23:00.000Z'
+        }
+        actual: NotionDatetime = Property.from_dict("dummy", input)
+        assert actual.value.year == 2023

@@ -10,6 +10,7 @@ from notion_client_wrapper.properties.status import Status
 from notion_client_wrapper.properties.date import Date
 from notion_client_wrapper.properties.url import Url
 from notion_client_wrapper.properties.relation import Relation
+from notion_client_wrapper.properties.notion_datetime import NotionDatetime
 
 class Property(metaclass=ABCMeta):
     id: Optional[str]
@@ -43,5 +44,7 @@ class Property(metaclass=ABCMeta):
                 return Url.of(key, property)
             case "relation":
                 return Relation.of(key, property)
+            case "last_edited_time":
+                return NotionDatetime.last_edited_time(property["last_edited_time"])
             case _:
-                raise Exception(f"Unsupported property type: {type}")
+                raise Exception(f"Unsupported property type: {type} {property}")
