@@ -40,6 +40,11 @@ class Paragraph(Block):
     def from_rich_text(rich_text: RichText) -> "Paragraph":
         return Paragraph(rich_text=rich_text)
 
+    @staticmethod
+    def from_plain_text(text: str) -> "Paragraph":
+        rich_text = RichText.from_plain_text(text)
+        return Paragraph(rich_text=rich_text)
+
     @property
     def type(self) -> str:
         return "paragraph"

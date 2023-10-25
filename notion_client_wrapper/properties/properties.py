@@ -22,7 +22,7 @@ class Properties:
             values.append(Property.from_dict(key, value))
         return Properties(values=values)
 
-    def get_title(self, key: str) -> Title:
+    def get_title(self) -> Title:
         for value in self.values:
             if isinstance(value, Title):
                 return value

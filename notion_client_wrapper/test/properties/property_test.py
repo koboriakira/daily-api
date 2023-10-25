@@ -1,5 +1,5 @@
 from unittest import TestCase
-from notion_client_wrapper.properties import Properties, Property, Title, Text, MultiSelect, Select, Number, Date, Status, Checkbox, Relation, Url
+from notion_client_wrapper.properties import Property, Title, Text, MultiSelect, Select, Number, Date, Status, Checkbox, Relation, Url
 
 
 class PropertyTest(TestCase):
