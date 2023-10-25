@@ -1,7 +1,7 @@
 from typing import Optional
 from dataclasses import dataclass
-from app.domain.notion.block.rich_text.rich_text_element import RichTextElement, RichTextTextElement, RichTextMentionElement
-from app.domain.notion.block.rich_text.rich_text import RichText
+from notion_client_wrapper.block.rich_text.rich_text_element import RichTextElement, RichTextTextElement, RichTextMentionElement
+from notion_client_wrapper.block.rich_text.rich_text import RichText
 
 
 @dataclass(frozen=True)

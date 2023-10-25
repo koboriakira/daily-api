@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from app.domain.notion.properties.property import Property
-from app.domain.notion.block.rich_text import RichText
+from notion_client_wrapper.properties.property import Property
+from notion_client_wrapper.block.rich_text import RichText
 from typing import Optional
 
 

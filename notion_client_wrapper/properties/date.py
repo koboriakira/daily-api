@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from app.domain.notion.properties.property import Property
+from notion_client_wrapper.properties.property import Property
 from typing import Optional
 from datetime import date
 

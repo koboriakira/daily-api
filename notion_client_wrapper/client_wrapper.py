@@ -1,5 +1,6 @@
 from notion_client import Client
 import os
+from notion_client_wrapper.property_translator import PropertyTranslator
 from notion_client_wrapper.block import BlockFactory, Block, Paragraph
 from notion_client_wrapper.base_page import BasePage
 from notion_client_wrapper.base_operator import BaseOperator
@@ -101,7 +102,7 @@ class ClientWrapper:
         cover = Cover.of(page_entity["cover"]) if page_entity["cover"] is not None else None
         icon = Icon.of(page_entity["icon"]) if page_entity["icon"] is not None else None
         archived = page_entity["archived"]
-        properties=Properties.from_dict(page_entity["properties"])
+        properties=PropertyTranslator.from_dict(page_entity["properties"])
         block_children = self.__get_block_children(page_id=id) if include_children else []
         return BasePage(id=id,
                         url=url,

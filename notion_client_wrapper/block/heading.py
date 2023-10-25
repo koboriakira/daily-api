@@ -1,5 +1,5 @@
-from app.domain.notion.block.block import Block
-from app.domain.notion.block.rich_text import RichText
+from notion_client_wrapper.block.block import Block
+from notion_client_wrapper.block.rich_text import RichText
 from dataclasses import dataclass
 from typing import Optional
 

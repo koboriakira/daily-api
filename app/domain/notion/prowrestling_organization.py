@@ -1,5 +1,5 @@
 from enum import Enum
-from app.domain.notion.properties.select import Select
+from notion_client_wrapper.properties import Select
 
 
 class ProwrestlingOrganization(Enum):

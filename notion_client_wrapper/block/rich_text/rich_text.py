@@ -1,4 +1,4 @@
-from app.domain.notion.block.rich_text.rich_text_element import RichTextElement
+from notion_client_wrapper.block.rich_text.rich_text_element import RichTextElement
 from dataclasses import dataclass
 
 

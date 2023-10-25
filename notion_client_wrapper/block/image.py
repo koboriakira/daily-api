@@ -1,4 +1,4 @@
-from app.domain.notion.block.block import Block
+from notion_client_wrapper.block.block import Block
 from dataclasses import dataclass
 
 

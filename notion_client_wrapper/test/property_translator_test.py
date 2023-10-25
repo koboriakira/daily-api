@@ -1,8 +1,52 @@
 from unittest import TestCase
-from notion_client_wrapper.properties import Property, Title, Text, MultiSelect, Select, Number, Date, Status, Checkbox, Relation, Url, NotionDatetime
+from notion_client_wrapper.property_translator import PropertyTranslator
+from notion_client_wrapper.properties.properties import Properties
+from notion_client_wrapper.properties.property import Property
+from notion_client_wrapper.properties.title import Title
+from notion_client_wrapper.properties.text import Text
+from notion_client_wrapper.properties.multi_select import MultiSelect
+from notion_client_wrapper.properties.select import Select
+from notion_client_wrapper.properties.number import Number
+from notion_client_wrapper.properties.checkbox import Checkbox
+from notion_client_wrapper.properties.status import Status
+from notion_client_wrapper.properties.date import Date
+from notion_client_wrapper.properties.url import Url
+from notion_client_wrapper.properties.relation import Relation
+from notion_client_wrapper.properties.notion_datetime import NotionDatetime
 
+class PropertyTranslatorTest(TestCase):
+    def test_シンプルなプロパティの変換(self):
+        input = {
+          "title": {
+            "id": "title",
+            "type": "title",
+            "title": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "テスト用ページ",
+                  "link": None
+                },
+                "annotations": {
+                  "bold": False,
+                  "italic": False,
+                  "strikethrough": False,
+                  "underline": False,
+                  "code": False,
+                  "color": "default"
+                },
+                "plain_text": "テスト用ページ",
+                "href": None
+              }
+            ]
+          }
+        }
+        actual = PropertyTranslator.from_dict(input)
 
-class PropertyTest(TestCase):
+        title = actual.get_title()
+        self.assertEqual(title.name, "title")
+        self.assertEqual(title.text, "テスト用ページ")
+
     def test_タイトルの変換(self):
         input =  {
           "id": "title",
@@ -27,7 +71,7 @@ class PropertyTest(TestCase):
             }
           ]
         }
-        actual: Title = Property.from_dict("dummy", input)
+        actual: Title = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.text == "テストワークスペース"
 
     def test_テキストの変換(self):
@@ -54,7 +98,7 @@ class PropertyTest(TestCase):
             }
           ]
         }
-        actual: Text = Property.from_dict("dummy", input)
+        actual: Text = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.text == "サンプルテキスト"
 
     def test_タグの変換(self):
@@ -74,7 +118,7 @@ class PropertyTest(TestCase):
             }
           ]
         }
-        actual: MultiSelect = Property.from_dict("dummy", input)
+        actual: MultiSelect = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.values[0].name == "タグA"
         assert actual.values[0].color == "orange"
         assert actual.values[1].name == "タグB"
@@ -90,7 +134,7 @@ class PropertyTest(TestCase):
             "color": "gray"
           }
         }
-        actual: Select = Property.from_dict("dummy", input)
+        actual: Select = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.selected_id == "6e65fbdd-6ffe-45f5-9a2d-5105e4a92547"
         assert actual.selected_name == "選択肢A"
         assert actual.selected_color == "gray"
@@ -101,7 +145,7 @@ class PropertyTest(TestCase):
           "type": "number",
           "number": 1
         }
-        actual: Number = Property.from_dict("dummy", input)
+        actual: Number = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.number == 1
 
     def test_日付の変換(self):
@@ -114,7 +158,7 @@ class PropertyTest(TestCase):
             "time_zone": None
           }
         }
-        actual: Date = Property.from_dict("dummy", input)
+        actual: Date = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.start == "2023-10-25"
         assert actual.end == None
 
@@ -128,7 +172,7 @@ class PropertyTest(TestCase):
             "color": "default"
           }
         }
-        actual: Status = Property.from_dict("dummy", input)
+        actual: Status = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.status_name == "Not started"
 
     def test_チェックボックスの変換(self):
@@ -137,7 +181,7 @@ class PropertyTest(TestCase):
           "type": "checkbox",
           "checkbox": True
         }
-        actual: Checkbox = Property.from_dict("dummy", input)
+        actual: Checkbox = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.checked == True
 
     def test_urlの変換(self):
@@ -146,7 +190,7 @@ class PropertyTest(TestCase):
           "type": "url",
           "url": "https://www.youtube.com/watch?v=cXYIvo6y1Os"
         }
-        actual: Url = Property.from_dict("dummy", input)
+        actual: Url = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.url == "https://www.youtube.com/watch?v=cXYIvo6y1Os"
 
     def test_リレーションの変換(self):
@@ -160,7 +204,7 @@ class PropertyTest(TestCase):
           ],
           "has_more": False
         }
-        actual: Relation = Property.from_dict("dummy", input)
+        actual: Relation = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.id_list[0] == "aa0f4973-c645-427c-bb69-b17eb47a3eaf"
 
     def test_Notion日時の変換(self):
@@ -169,5 +213,5 @@ class PropertyTest(TestCase):
             'type': 'last_edited_time',
             'last_edited_time': '2023-10-25T01:23:00.000Z'
         }
-        actual: NotionDatetime = Property.from_dict("dummy", input)
+        actual: NotionDatetime = PropertyTranslator.from_property_dict("dummy", input)
         assert actual.value.year == 2023

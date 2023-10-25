@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from fastapi import APIRouter
 from typing import Optional
 from app.interface.notion_client import NotionClient
-from app.domain.notion.properties import Status
+from notion_client_wrapper.properties import Status
 from app.router.notion.model.page_base_model import PageBaseModel
 
 

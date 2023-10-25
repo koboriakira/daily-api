@@ -1,11 +1,9 @@
-import os
-from app.domain.notion.database.database_type import DatabaseType
-from app.domain.notion.page import DailyLog
-from app.domain.notion.properties.select_enums import ProwrestlingOrganization
-from datetime import datetime, timedelta, date
+from app.domain.notion.database_type import DatabaseType
+from app.domain.notion.prowrestling_organization import ProwrestlingOrganization
+from app.util.get_logger import get_logger
+from datetime import datetime, timedelta
 from datetime import date as DateObject
 from typing import Optional
-from app.util.get_logger import get_logger
 from notion_client_wrapper.client_wrapper import ClientWrapper, BasePage
 from notion_client_wrapper.properties import Property, Date, Title, Text, Relation, Status, Url, Cover
 from notion_client_wrapper.block import Block, ChildDatabase
@@ -19,7 +17,7 @@ class NotionClient:
     def __init__(self):
         self.client = ClientWrapper()
 
-    def get_daily_log(self, date: Optional[DateObject] = None, detail: bool = False) -> DailyLog:
+    def get_daily_log(self, date: Optional[DateObject] = None, detail: bool = False) -> dict:
         """
         指定された日付のデイリーログを取得する
         date: 指定されない場合は今日の日付
@@ -34,13 +32,13 @@ class NotionClient:
         url = daily_log.url
         created_time = daily_log.created_time
         last_edited_time = daily_log.last_edited_time
-        parent = daily_log.parent
-        archived = daily_log.archived
+        # parent = daily_log.parent
+        # archived = daily_log.archived
 
         properties = daily_log.properties
 
         # 日付
-        date = properties.get_date(name="日付")
+        daily_log_date = properties.get_date(name="日付")
 
         # 目標
         daily_goal = properties.get_text(name="目標")
@@ -48,27 +46,15 @@ class NotionClient:
         # ふりかえり
         daily_retro_comment = properties.get_text(name="ふりかえり")
 
-        return DailyLog(
-            id=daily_log_id,
-            url=url,
-            created_time=created_time.value,
-            last_edited_time=last_edited_time.value,
-            parent=parent,
-            archived=archived,
-            date=date,
-            daily_goal=daily_goal.text,
-            daily_retro_comment=daily_retro_comment.text,
-            recipes=[],
-            webclips=[],
-            books=[],
-            prowrestling_watches=[],
-            musics=[],
-            zettlekasten=[],
-            restaurants=[],
-            go_outs=[],
-            aratas=[]
-        )
-
+        return {
+            "id": daily_log_id,
+            "url": url,
+            "created_time": created_time.value,
+            "last_edited_time": last_edited_time.value,
+            "date": daily_log_date.start,
+            "daily_goal": daily_goal.text,
+            "daily_retro_comment": daily_retro_comment.text,
+        }
 
     def get_daily_log_id(self, date: DateObject) -> str:
         daily_log = self.__find_daily_log(date)
@@ -612,7 +598,7 @@ class NotionClient:
             return None
         return daily_logs[0]
 
-    def __create_daily_log_page(self, date: date, weekly_log_id: str) -> dict:
+    def __create_daily_log_page(self, date: DateObject, weekly_log_id: str) -> dict:
         return self.__create_page_in_database(
             database_type=DatabaseType.DAILY_LOG,
             properties=[

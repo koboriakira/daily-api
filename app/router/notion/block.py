@@ -4,8 +4,8 @@ from pydantic import BaseModel
 from typing import Optional, Union
 from app.interface.notion_client import NotionClient
 from app.util.authorize_checker import AuthorizeChecker
-from app.domain.notion.block.rich_text import RichTextBuilder
-from app.domain.notion.block import Paragraph, Heading
+from notion_client_wrapper.block.rich_text import RichTextBuilder
+from notion_client_wrapper.block import Paragraph, Heading
 
 router = APIRouter()
 

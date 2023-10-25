@@ -1,6 +1,6 @@
 from app.router.notion.model.project_model import Project, convert_to_project_model
 from app.router.notion.model.book_model import Book, convert_to_book_model
-from app.domain.notion.page.goal.goal_type import GoalType
+from app.domain.notion.goal_type import GoalType
 from fastapi import APIRouter
 from typing import Optional
 from app.interface.notion_client import NotionClient

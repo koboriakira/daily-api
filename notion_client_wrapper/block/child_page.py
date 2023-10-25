@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from app.domain.notion.block.block import Block
+from notion_client_wrapper.block.block import Block
 
 
 class ChildPage(Block):

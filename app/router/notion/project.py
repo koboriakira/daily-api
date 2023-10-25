@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from fastapi import APIRouter
 from typing import Optional
 from app.interface.notion_client import NotionClient
-from app.domain.notion.properties import Status
+from notion_client_wrapper.properties import Status
 from datetime import datetime as DatetimeObject
 from datetime import date as DateObject
 from datetime import timedelta
