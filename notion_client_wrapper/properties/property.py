@@ -46,5 +46,7 @@ class Property(metaclass=ABCMeta):
                 return Relation.of(key, property)
             case "last_edited_time":
                 return NotionDatetime.last_edited_time(property["last_edited_time"])
+            case "created_time":
+                return NotionDatetime.created_time(property["created_time"])
             case _:
                 raise Exception(f"Unsupported property type: {type} {property}")
