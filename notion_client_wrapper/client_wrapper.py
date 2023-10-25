@@ -40,6 +40,10 @@ class ClientWrapper:
 
     def create_page_in_database(self, database_id: str, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """
+        print(f"database_id: {database_id}")
+        print(Properties(values=properties).__dict__() if len(
+                properties) > 0 else None)
+        print(cover.__dict__() if cover is not None else None)
         return self.client.pages.create(
             parent={
                 "type": "database_id",
@@ -65,9 +69,9 @@ class ClientWrapper:
         """ 指定されたブロックの子ブロックを取得する """
         return self.__get_block_children(page_id=block_id)
 
-    def append_block(self, block_id: str, blocks: Block) -> dict:
+    def append_block(self, block_id: str, block: Block) -> dict:
         """ 指定されたブロックに子ブロックを追加する """
-        return self.append_blocks(block_id=block_id, blocks=[blocks])
+        return self.append_blocks(block_id=block_id, blocks=[block])
 
     def append_blocks(self, block_id: str, blocks: list[Block]) -> dict:
         """ 指定されたブロックに子ブロックを追加する """
@@ -124,6 +128,7 @@ class ClientWrapper:
 
 if __name__ == "__main__":
     # python -m notion_client_wrapper.client_wrapper
+    from notion_client_wrapper.properties.title import Title
     client = ClientWrapper()
     # page = client.retrieve_page(page_id="b7576fbdde9b476f913924c1bd90b250")
     # print(page)
@@ -131,5 +136,7 @@ if __name__ == "__main__":
     # print(pages)
     # blocks = client.list_blocks(block_id="b7576fbdde9b476f913924c1bd90b250")
     # print(blocks)
-    result = client.append_blocks(block_id="b7576fbdde9b476f913924c1bd90b250", blocks=[Paragraph.from_plain_text("test")])
+    # result = client.append_blocks(block_id="b7576fbdde9b476f913924c1bd90b250", blocks=[Paragraph.from_plain_text("test")])
     # print(result)
+    result = client.create_page_in_database(database_id="986876c2e7f8457abd4437334835d0db", properties=[Title.from_plain_text("title", "test")])
+    print(result)
