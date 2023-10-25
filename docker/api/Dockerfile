@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir --upgrade -r /tmp/requirements.txt
 
 COPY ./app/ /var/www/app/
+COPY ./notion_client_wrapper/ /var/www/notion_client_wrapper/
 
 WORKDIR /var/www
 
