@@ -37,34 +37,7 @@ class Properties:
                 return value
         raise Exception(f"Title property not found. properties: {self.values}")
 
-    def get_status(self, name: str) -> Status:
-        return self._get_property(name=name, instance_class=Status)
-
-    def get_text(self, name: str) -> Text:
-        return self._get_property(name=name, instance_class=Text)
-
-    def get_date(self, name: str) -> Date:
-        return self._get_property(name=name, instance_class=Date)
-
-    def get_select(self, name: str) -> Select:
-        return self._get_property(name=name, instance_class=Select)
-
-    def get_multi_select(self, name: str) -> MultiSelect:
-        return self._get_property(name=name, instance_class=MultiSelect)
-
-    def get_relation(self, name: str) -> Relation:
-        return self._get_property(name=name, instance_class=Relation)
-
-    def get_checkbox(self, name: str) -> Checkbox:
-        return self._get_property(name=name, instance_class=Checkbox)
-
-    def get_url(self, name: str) -> Url:
-        return self._get_property(name=name, instance_class=Url)
-
-    def get_number(self, name: str) -> Number:
-        return self._get_property(name=name, instance_class=Number)
-
-    def _get_property(self, name: str, instance_class: type) -> Optional[Property]:
+    def get_property(self, name: str, instance_class: type) -> Optional[Property]:
         for value in self.values:
             if isinstance(value, instance_class) and value.name == name:
                 return value

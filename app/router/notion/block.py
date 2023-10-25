@@ -24,7 +24,7 @@ async def append_text(block_id: str, request: AppendTextRequest):
     if isinstance(text, str):
         rich_text = RichTextBuilder.get_instance().add_text(text).build()
         paragraph = Paragraph.from_rich_text(rich_text=rich_text)
-        notion_client.append_blocks(block_id=block_id, block=paragraph)
+        notion_client.append_block(block_id=block_id, block=paragraph)
         return True
 
     # リスト
@@ -33,7 +33,7 @@ async def append_text(block_id: str, request: AppendTextRequest):
         rich_text = RichTextBuilder.get_instance().add_text(text_content).build()
         paragraph = Paragraph.from_rich_text(rich_text=rich_text)
         blocks.append(paragraph)
-    notion_client.append_blocks(block_id=block_id, block=blocks)
+    notion_client.append_blocks(block_id=block_id, blocks=blocks)
     return True
 
 
@@ -54,7 +54,7 @@ async def append_relation(block_id: str, request: AppendRelationRequest):
             .add_page_mention(page_id=request.block_id)\
             .build()
         paragraph = Paragraph.from_rich_text(rich_text=rich_text)
-        notion_client.append_blocks(block_id=block_id, block=paragraph)
+        notion_client.append_block(block_id=block_id, block=paragraph)
         return {
             "success": True
         }
@@ -72,7 +72,7 @@ async def append_heading(block_id: str, request: AppendHeadingRequest):
     notion_client = NotionClient()
     heading = Heading.from_plain_text(
         heading_size=request.size, text=request.text)
-    notion_client.append_blocks(block_id=block_id, block=heading)
+    notion_client.append_block(block_id=block_id, block=heading)
     return {
         "success": True
     }
