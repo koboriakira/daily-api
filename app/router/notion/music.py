@@ -7,8 +7,10 @@ from app.spotify.controller.spotify_controller import SpotifyController
 from datetime import date as DateObject
 from datetime import datetime as DatetimeObject
 from app.model import NotionUrl
+from app.util.get_logger import get_logger
 
 
+logger = get_logger(__name__)
 router = APIRouter()
 
 
@@ -62,8 +64,10 @@ async def post_music(request: PostMusicRequest):
     }
 
 @ router.post("/spotify/{spotify_track_id}", response_model=dict)
-async def post_music(spotify_track_id: str):
+async def post_music_by_spotify_track(spotify_track_id: str):
     """ SpotifyのトラックIDをもとに音楽を記録 """
+    logger.info("post_music_by_spotify_track")
+    logger.info(spotify_track_id)
     spotify_controller = SpotifyController()
     notion_client = NotionClient()
 
@@ -76,7 +80,7 @@ async def post_music(spotify_track_id: str):
                                      artists=track.artists,
                                      spotify_url=track.spotify_url,
                                      cover_url=track.cover_url,
-                                     release_date=DateObject.fromisoformat(track.release_date),
+                                     release_date=DateObject.fromisoformat(track.release_date) if track.release_date is not None else None,
                                      )
     return {
         "page_id": result["id"],

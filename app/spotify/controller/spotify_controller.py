@@ -30,3 +30,14 @@ class SpotifyController:
     @staticmethod
     def authorize(code: str) -> dict:
         return Spotipy.authorize(code=code)
+
+
+if __name__ == "__main__":
+    # python -m app.spotify.controller.spotify_controller
+    controller = SpotifyController()
+    track = controller.get_track("5c0zBwMzsUlu66GBzJINuv")
+    print(track.name)
+    print(track.artists)
+    print(track.spotify_url)
+    print(track.cover_url)
+    print(track.release_date)

@@ -64,7 +64,7 @@ class NotionClient:
             return
         self.client.append_block(block_id=daily_log["id"], block=block)
 
-    def add_track(self, name: str, artists: list[str], spotify_url: str, cover_url: str, release_date: DateObject, daily_log_id: str = "") -> dict:
+    def add_track(self, name: str, artists: list[str], spotify_url: str, cover_url: str, release_date: Optional[DateObject] = None, daily_log_id: str = "") -> dict:
         """ 指定されたトラックを音楽データベースに追加する """
         # すでに存在するか確認
         musics = self.client.retrieve_database(
@@ -86,16 +86,18 @@ class NotionClient:
 
         # 新しいページを作成
         artist_name = ",".join(artists)
-        result = self.__create_page_in_database(
-            database_type=DatabaseType.MUSIC,
-            cover=Cover.from_external_url(cover_url),
-            properties=[
+        properties=[
                 Title.from_plain_text(name="名前", text=name),
                 Text.from_plain_text(name="Artist", text=artist_name),
                 Relation.from_id_list(name="タグ", id_list=tag_page_ids),
-                Date.from_start_date(name="リリース日", start_date=release_date),
                 Url.from_url(name="Spotify", url=spotify_url)
             ]
+        if release_date is not None:
+            properties.append(Date.from_start_date(name="リリース日", start_date=release_date))
+        result = self.__create_page_in_database(
+            database_type=DatabaseType.MUSIC,
+            cover=Cover.from_external_url(cover_url),
+            properties=properties
         )
 
         return result
@@ -625,4 +627,10 @@ if __name__ == "__main__":
     notion_client = NotionClient()
     # notion_client.test_select_types(
     #     page_id="2ed9aff4b8724539b4b030c433eddc8e", column_name="団体")
-    notion_client.update_recursive_project(date=DateObject.today())
+    notion_client.add_track(
+        name="I miss you～時を越えて～",
+        artists=['MISIA', 'DCT'],
+        spotify_url="https://open.spotify.com/track/5c0zBwMzsUlu66GBzJINuv",
+        cover_url="https://i.scdn.co/image/ab67616d0000b2733089e9356a67ed83e863902c",
+        release_date=None
+    )
