@@ -1,8 +1,9 @@
 from app.router.notion.model.page_base_model import PageBaseModel
 from pydantic import BaseModel, Field
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from typing import Optional
 from app.interface.notion_client import NotionClient
+from app.spotify.controller.spotify_controller import SpotifyController
 from datetime import date as DateObject
 from datetime import datetime as DatetimeObject
 from app.model import NotionUrl
@@ -45,7 +46,7 @@ class PostMusicRequest(BaseModel):
 
 @ router.post("/", response_model=dict)
 async def post_music(request: PostMusicRequest):
-    """ 音楽を取得 """
+    """ 音楽を記録 """
     notion_client = NotionClient()
 
     daily_log_id = notion_client.get_daily_log_id(date=DateObject.today())
@@ -55,6 +56,28 @@ async def post_music(request: PostMusicRequest):
                                      cover_url=request.cover_url,
                                      release_date=request.release_date,
                                      daily_log_id=daily_log_id)
+    return {
+        "page_id": result["id"],
+        "url": result["url"]
+    }
+
+@ router.post("/spotify/{spotify_track_id}", response_model=dict)
+async def post_music(spotify_track_id: str):
+    """ SpotifyのトラックIDをもとに音楽を記録 """
+    spotify_controller = SpotifyController()
+    notion_client = NotionClient()
+
+    spotify_controller = SpotifyController()
+    track = spotify_controller.get_track(track_id=spotify_track_id)
+    if track is None:
+        return HTTPException(status_code=404, detail="Track not found")
+
+    result = notion_client.add_track(name=track.name,
+                                     artists=track.artists,
+                                     spotify_url=track.spotify_url,
+                                     cover_url=track.cover_url,
+                                     release_date=DateObject.fromisoformat(track.release_date),
+                                     )
     return {
         "page_id": result["id"],
         "url": result["url"]

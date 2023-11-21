@@ -64,7 +64,7 @@ class NotionClient:
             return
         self.client.append_block(block_id=daily_log["id"], block=block)
 
-    def add_track(self, name: str, artists: list[str], spotify_url: str, cover_url: str, release_date: DateObject, daily_log_id: str) -> dict:
+    def add_track(self, name: str, artists: list[str], spotify_url: str, cover_url: str, release_date: DateObject, daily_log_id: str = "") -> dict:
         """ 指定されたトラックを音楽データベースに追加する """
         # すでに存在するか確認
         musics = self.client.retrieve_database(
@@ -93,7 +93,6 @@ class NotionClient:
                 Title.from_plain_text(name="名前", text=name),
                 Text.from_plain_text(name="Artist", text=artist_name),
                 Relation.from_id_list(name="タグ", id_list=tag_page_ids),
-                Relation.from_id(name="デイリーログ", id=daily_log_id),
                 Date.from_start_date(name="リリース日", start_date=release_date),
                 Url.from_url(name="Spotify", url=spotify_url)
             ]
