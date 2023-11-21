@@ -10,7 +10,9 @@ from notion_client_wrapper.properties.properties import Properties
 from notion_client_wrapper.properties.property import Property
 from notion_client_wrapper.properties.notion_datetime import NotionDatetime
 from typing import Optional
+from app.util.get_logger import get_logger
 
+logger = get_logger(__name__)
 
 class ClientWrapper:
     def __init__(self):
@@ -41,10 +43,9 @@ class ClientWrapper:
 
     def create_page_in_database(self, database_id: str, cover: Optional[Cover] = None, properties: list[Property] = []) -> dict:
         """ データベース上にページを新規作成する """
-        print(f"database_id: {database_id}")
-        print(Properties(values=properties).__dict__() if len(
-                properties) > 0 else None)
-        print(cover.__dict__() if cover is not None else None)
+        logger.info("create_page_in_database")
+        logger.info(properties)
+
         return self.client.pages.create(
             parent={
                 "type": "database_id",

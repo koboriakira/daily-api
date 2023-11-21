@@ -95,7 +95,7 @@ def update_project(project_id: str, request: UpdateProjectRequest):
     }
 
 @ router.post("/recursive/")
-def update_recursive_project(project_id: str, request: UpdateProjectRequest):
+def update_recursive_project():
     """ 繰り返しのプロジェクトを作成する """
     notion_client = NotionClient()
     notion_client.update_recursive_project(date=DateObject.today())

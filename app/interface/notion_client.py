@@ -7,6 +7,7 @@ from typing import Optional
 from notion_client_wrapper.client_wrapper import ClientWrapper, BasePage
 from notion_client_wrapper.properties import Property, Date, Title, Text, Relation, Status, Url, Cover, Select
 from notion_client_wrapper.block import Block, ChildDatabase
+from app.domain.recursive_condition import RecursiveCondition
 
 
 logger = get_logger(__name__)
@@ -354,29 +355,20 @@ class NotionClient:
         # 指定された日付に完了したプロジェクトを取得する
         projects = self.retrieve_projects(completed_at=date)
         for project in projects:
-            recursive_conf: Optional[str] = project["recursive_conf"]
-            if recursive_conf is None or recursive_conf == "":
+            recursive_conf = RecursiveCondition.of(cond_text=project["recursive_conf"], date=date)
+            if not recursive_conf.is_valid:
                 continue
-            logger.info(f"recursive_conf: {project['title']} {recursive_conf}")
-            target_date = None
-            if recursive_conf.lower().startswith("next"):
-                # "next"系
-                next_recursive_conf  = recursive_conf.lower().replace("next", "").strip()
-                # next_recursive_confが数値だった場合
-                if next_recursive_conf.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "").isdecimal():
-                   # 次の月のn日
-                   n = next_recursive_conf.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "")
-                   target_date = DateObject(year=date.year, month=date.month + 1, day=int(n))
-                # next_recursive_confが曜日だった場合
-                elif next_recursive_conf in DAYS:
-                    # 次のn曜日
-                    target_date = self.__get_next_weekday(date, next_recursive_conf)
-            self.create_project(title=project["title"],
-                                start_date=target_date,
-                                status=Status.from_status_name(name="ステータス", status_name="Scheduled").status_name,
-                                remind_date=target_date,
-                                recursive_conf=recursive_conf,
-                                )
+            project_title = project["title"]
+            next_date = recursive_conf.get_next_date()
+            logger.info(f"update_recursive_project: {project_title} -> {next_date.isoformat()}")
+            response = self.create_project(
+                title=f"{project_title} ({next_date.isoformat()}))",
+                start_date=next_date,
+                status=Status.from_status_name(name="ステータス", status_name="Scheduled").status_name,
+                remind_date=next_date,
+                recursive_conf=recursive_conf.cond_text,
+                )
+            logger.debug(f"response: {response}")
 
 
 
